@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guinea Pig Food Guide</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background-color: #f2f2f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Removed justify-content to prevent misalignment */
+    height: 100vh;
+  }
+
+  #container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 90%;
+    max-width: 400px;
+    gap: 20px;
+  }
+
+  .search-container, #detail {
+    width: 100%;
+    max-width: 400px;
+  }
+
+  .search-container {
+    position: relative;
+    width: 100%;
+  }
+
+  #search {
+    width: 100%;
+    padding: 15px 15px 15px 40px;
+    font-size: 1.2rem;
+    border-radius: 15px;
+    border: 1px solid #ccc;
+    font-style: italic;
+    color: grey;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    background-color: white;
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: grey;
+    pointer-events: none;
+  }
+
+  #dropdown {
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    background-color: white;
+    border-radius: 15px;
+    margin-top: 5px;
+    position: absolute;
+    z-index: 100;
+    max-height: 250px;
+    overflow-y: auto;
+    display: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  }
+
+  .dropdown-item {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+  }
+
+  .dropdown-item:hover {
+    background-color: #EEEDE8;
+  }
+
+  #detail {
+    width: 100%;
+    margin-top: 20px;
+  }
+
+  .detail {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 25px 30px;
+    border-radius: 25px;
+    color: white;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .detail > div:first-child {
+    text-align: left;
+    flex: 1;
+    padding-right: 15px;
+  }
+
+  .detail h2 {
+    margin: 0 0 12px 0;
+    font-size: 1.75rem;
+    font-weight: 600;
+  }
+
+  .detail p {
+    margin: 8px 0;
+    font-size: 1.1rem;
+    line-height: 1.4;
+  }
+
+  .source-link {
+    font-size: 0.8rem;
+    color: #e0e0e0;
+  }
+
+</style>
+</head>
+<body>
+
+<div id="container">
+  <div class="search-container">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search" placeholder="Exemple: Carotte">
+  </div>
+  <div id="dropdown"></div>
+  <div id="detail"></div>
+  </div>
+
+  <footer style="
+    margin-top: 40px;
+    margin-bottom: 32px;
+    padding-bottom: 8px;
+    font-size: 0.95rem;
+    color: #000;
+    text-align: center;
+    width: 100%;
+    /* font-style: italic; */
+    /* text-shadow: 0 1px 4px rgba(0,0,0,0.08); */
+  ">
+    Données adaptées de Cobaye's Club (2021)<br>
+    Site créé par Yaroslav Susaiev (2025)
+  </footer>
+
+<script>
+const colors = {
+  "proscrire": "#ff3b30",
+  "déconseillé": "#ff3b30",
+  "conseillé": "#34c759",
+  "avec moderation": "#ffcc00"
+};
+
+// Map food names to representative image URLs and sources
+// Removed images object as per instructions
+
+const searchInput = document.getElementById('search');
+const dropdown = document.getElementById('dropdown');
+const detailDiv = document.getElementById('detail');
+
+let foods = [];
+
+// Load JSON data
+fetch('foods.json')
+  .then(response => response.json())
+  .then(data => {
+    foods = data;
+    // Set random placeholder
+    if (foods.length > 0) {
+      const randomFood = foods[Math.floor(Math.random() * foods.length)];
+      searchInput.placeholder = `Exemple: ${randomFood.name}`;
+    }
+  })
+  .catch(err => console.error("Error loading data:", err));
+
+function showDropdown(filtered) {
+  dropdown.innerHTML = '';
+  if(filtered.length === 0) {
+    dropdown.style.display = 'none';
+    return;
+  }
+  filtered.forEach(food => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.textContent = `${food.emoji} ${food.name}`;
+    item.onclick = () => showDetail(food);
+    dropdown.appendChild(item);
+  });
+  dropdown.style.display = 'block';
+}
+
+function lightenColor(hex, percent) {
+  // Returns a lighter version of a hex color, percent in [0,100]
+  let num = parseInt(hex.replace('#',''),16);
+  let r = (num >> 16) + Math.round((255 - (num >> 16)) * (percent/100));
+  let g = ((num >> 8) & 0x00FF) + Math.round((255 - ((num >> 8) & 0x00FF)) * (percent/100));
+  let b = (num & 0x0000FF) + Math.round((255 - (num & 0x0000FF)) * (percent/100));
+  return `rgb(${r},${g},${b})`;
+}
+
+function showDetail(food) {
+  dropdown.style.display = 'none';
+  searchInput.value = '';
+  searchInput.placeholder = '';
+
+  const baseColor = colors[food.category] || "#2193b0";
+  const lightColor = lightenColor(baseColor, 60);
+  // Gradient from lighter to normal color
+  document.body.style.background = `linear-gradient(145deg, ${lightColor}, ${baseColor})`;
+
+  let categoryEmoji = '';
+  switch(food.category) {
+    case 'proscrire': categoryEmoji = '⚠️'; break;
+    case 'déconseillé': categoryEmoji = '❌'; break;
+    case 'avec moderation': categoryEmoji = '🟡'; break;
+    case 'conseillé': categoryEmoji = '✅'; break;
+    case 'très conseillé': categoryEmoji = '🌟'; break;
+    default: categoryEmoji = 'ℹ️';
+  }
+
+  const capitalizedName = food.name.charAt(0).toUpperCase() + food.name.slice(1);
+
+  detailDiv.innerHTML = `
+    <div class="detail" style="background: white; color: black; display: flex; justify-content: space-between; align-items: center;">
+      <div style="text-align: left; flex: 1; padding-right: 10px;">
+        <h2>${capitalizedName}</h2>
+        <p><strong>Vitamine C:</strong> ${food.vitC}</p>
+        <p style="margin-top:5px;"><strong>Catégorie:</strong> ${food.category}</p>
+        <p style="font-style: italic; margin-top:10px;">${food.comment || ""}</p>
+      </div>
+      <div style="font-size: 4rem; flex-shrink:0;">
+        ${categoryEmoji}
+      </div>
+    </div>
+  `;
+}
+
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.toLowerCase().trim();
+  if (!query) {
+    dropdown.style.display = 'none';
+    detailDiv.innerHTML = '';
+    return;
+  }
+  const filtered = foods.filter(f => f.name.toLowerCase().includes(query));
+  showDropdown(filtered);
+});
+</script>
+
+</body>
+</html>
