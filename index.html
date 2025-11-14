@@ -4,36 +4,246 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Guinea Pig Food Guide</title>
-<!-- Head -->
-<link rel="stylesheet" href="styles.css">
-<script defer src="script.js"></script>
+
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  background-color: #f2f2f7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+}
+#container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 90%;
+  max-width: 400px;
+  gap: 20px;
+}
+h1.tagline {
+  font-size: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+  color: #333;
+  margin: 20px 0;
+  transition: all 0.3s ease;
+}
+.search-container, #detail {
+  width: 100%;
+  max-width: 400px;
+}
+.search-container { position: relative; }
+#search {
+  width: 100%;
+  padding: 15px 15px 15px 40px;
+  font-size: 1.2rem;
+  border-radius: 15px;
+  border: 1px solid #ccc;
+  font-style: italic;
+  color: grey;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background-color: white;
+}
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  color: grey;
+  pointer-events: none;
+}
+#dropdown {
+  width: 100%;
+  max-width: 400px;
+  background-color: white;
+  border-radius: 15px;
+  margin-top: 5px;
+  position: absolute;
+  z-index: 100;
+  max-height: 250px;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.dropdown-item {
+  padding: 12px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+}
+.dropdown-item:hover { background-color: #EEEDE8; }
+#detail { width: 100%; margin-top: 20px; }
+.card-horizontal {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 14px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+  width: 100%;
+  max-width: 400px;
+  gap: 16px;
+  position: relative;
+  box-sizing: border-box;
+}
+.icon-container-horizontal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  font-size: 36px;
+  border-radius: 50%;
+  background-color: #f0f0f5;
+  flex-shrink: 0;
+}
+.text-container-horizontal { display: flex; flex-direction: column; justify-content: center; }
+.message-text { font-size: 16px; font-weight: 600; margin: 0; }
+.sub-text { font-size: 14px; color: #555; margin: 2px 0 0 0; }
+.comment { font-style: italic; margin: 4px 0 0 0; color: #333; }
+.vitc-bottom-horizontal { color: #ff9500; font-weight: 600; }
+</style>
 </head>
 <body>
 
 <div id="container">
   <h1 class="tagline" id="tagline">Que peut manger un cochon d’Inde ?</h1>
-
+  
   <div class="search-container">
     <span class="search-icon">🔍</span>
     <input type="text" id="search" placeholder="Exemple: Carotte">
   </div>
+
   <div id="dropdown"></div>
   <div id="detail"></div>
 </div>
 
-<footer style="
-  margin-top: 40px;
-  margin-bottom: 32px;
-  padding-bottom: 8px;
-  font-size: 0.95rem;
-  color: #000;
-  text-align: center;
-  width: 100%;
-">
+<footer style="margin-top:40px;margin-bottom:32px;padding-bottom:8px;font-size:0.65rem;color:#000;text-align:center;width:100%;">
   Données adaptées à partir de Cobaye’s Club (© 2021, Fanny);<br>
   utilisées à des fins éducatives et non commerciales.<br><br>
   Site créé par Yaroslav Susaiev (2025)
 </footer>
+
+<script>
+// Colors and messages mapping
+const colors = {
+  "proscrire": "#ff3b30",
+  "déconseillé": "#ff3b30",
+  "conseillé": "#34c759",
+  "très conseillé": "#32d74b",
+  "avec moderation": "#ffcc00"
+};
+
+const answers = {
+  "proscrire": "❌ Non, c’est toxique !",
+  "déconseillé": "🚫 Non, à éviter !",
+  "avec moderation": "☝️ Oui, mais avec modération !",
+  "conseillé": "✅ Oui, sans problème !",
+  "très conseillé": "🌟 Oui, c’est excellent !"
+};
+
+// DOM references
+const tagline = document.getElementById('tagline');
+const searchInput = document.getElementById('search');
+const dropdown = document.getElementById('dropdown');
+const detailDiv = document.getElementById('detail');
+
+let foods = [];
+
+// Load foods JSON
+fetch('foods.json')
+  .then(res => res.json())
+  .then(data => {
+    foods = data;
+    if (foods.length > 0) {
+      const randomFood = foods[Math.floor(Math.random() * foods.length)];
+      searchInput.placeholder = `Exemple: ${randomFood.name}`;
+    }
+  });
+
+// Display filtered dropdown
+function showDropdown(filtered) {
+  dropdown.innerHTML = '';
+  if (filtered.length === 0) {
+    dropdown.style.display = 'none';
+    return;
+  }
+
+  filtered.forEach(food => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.textContent = `${food.emoji || ''} ${food.name}`;
+    item.onclick = () => showDetail(food);
+    dropdown.appendChild(item);
+  });
+
+  dropdown.style.display = 'block';
+}
+
+// Utility: lighten color
+function lightenColor(hex, percent) {
+  const num = parseInt(hex.replace('#',''),16);
+  const r = (num>>16) + Math.round((255 - (num>>16)) * (percent/100));
+  const g = ((num>>8) & 0xFF) + Math.round((255 - ((num>>8) & 0xFF)) * (percent/100));
+  const b = (num & 0xFF) + Math.round((255 - (num & 0xFF)) * (percent/100));
+  return `rgb(${r}, ${g}, ${b})`;
+}
+
+// Show detailed food card
+function showDetail(food) {
+  dropdown.style.display = 'none';
+  searchInput.value = '';
+  searchInput.placeholder = '';
+
+  tagline.textContent = answers[food.category] || "ℹ️ Information indisponible";
+
+  const baseColor = colors[food.category] || "#2193b0";
+  const lightColor = lightenColor(baseColor, 60);
+  document.body.style.background = `linear-gradient(145deg, ${lightColor}, ${baseColor})`;
+
+  const name = food.name.charAt(0).toUpperCase() + food.name.slice(1);
+
+  detailDiv.innerHTML = `
+    <div class="card-horizontal" style="display:flex;flex-direction:column;padding:16px 20px;align-items:flex-start;">
+      <div style="display:flex;width:100%;align-items:center;justify-content:space-between;margin-bottom:${food.comment ? '8px':'0'};">
+        <div class="icon-container-horizontal" style="width:60px;height:60px;font-size:48px;display:flex;align-items:center;justify-content:center;">
+          ${food.emoji || ''}
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center;margin:0 16px;flex-grow:1;">
+          <p class="message-text" style="font-size:18px;font-weight:600;margin:0;">${name}</p>
+          <p class="sub-text" style="font-size:14px;color:#555;margin:4px 0 0 0;">${food.category}</p>
+        </div>
+        <div class="vitc-bottom-horizontal">C=${food.vitC ? food.vitC : '🤔'}</div>
+      </div>
+      ${food.comment ? `<p class="comment" style="font-style:italic;margin:0;">${food.comment}</p>` : ''}
+    </div>
+  `;
+}
+
+// Handle search input
+searchInput.addEventListener('input', () => {
+  const query = searchInput.value.toLowerCase().trim();
+
+  if (!query) {
+    dropdown.style.display = 'none';
+    detailDiv.innerHTML = '';
+    tagline.textContent = "Que peut manger un cochon d’Inde ?";
+    document.body.style.background = "#f2f2f7";
+    return;
+  }
+
+  const filtered = foods.filter(f => f.name.toLowerCase().includes(query));
+  showDropdown(filtered);
+});
+</script>
 
 </body>
 </html>
