@@ -2,26 +2,30 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guinea Pig Food Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Cavy Food Guide</title>
+<link rel="icon" type="image/png" sizes="32x32" href="logo_v2.png">
+<link rel="apple-touch-icon" sizes="180x180" href="logo_v2.png">
 
 <style>
 * { box-sizing: border-box; }
 body {
+  background-color: #f2f2f7;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-  background-color: #f2f2f7;
   display: flex;
   flex-direction: column;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
 }
 #container {
+  flex: 1 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
   width: 90%;
   max-width: 400px;
   gap: 20px;
@@ -33,6 +37,15 @@ h1.tagline {
   color: #333;
   margin: 20px 0;
   transition: all 0.3s ease;
+  width: 100%;
+  max-width: 400px;
+  word-wrap: break-word;
+}
+
+@media (max-width: 360px) {
+  h1.tagline {
+    font-size: 1.3rem;
+  }
 }
 .search-container, #detail {
   width: 100%;
@@ -115,7 +128,7 @@ h1.tagline {
 <body>
 
 <div id="container">
-  <h1 class="tagline" id="tagline">Que peut manger un cochon d’Inde ?</h1>
+  <h1 class="tagline" id="tagline"></h1>
   
   <div class="search-container">
     <span class="search-icon">🔍</span>
@@ -150,6 +163,8 @@ const answers = {
   "très conseillé": "🌟 Oui, c’est excellent !"
 };
 
+const defaultTagline = "Que peut manger un cochon d’Inde ?";
+
 // DOM references
 const tagline = document.getElementById('tagline');
 const searchInput = document.getElementById('search');
@@ -157,6 +172,10 @@ const dropdown = document.getElementById('dropdown');
 const detailDiv = document.getElementById('detail');
 
 let foods = [];
+
+document.addEventListener('DOMContentLoaded', () => {
+  tagline.textContent = defaultTagline;
+});
 
 // Load foods JSON
 fetch('foods.json')
@@ -235,7 +254,7 @@ searchInput.addEventListener('input', () => {
   if (!query) {
     dropdown.style.display = 'none';
     detailDiv.innerHTML = '';
-    tagline.textContent = "Que peut manger un cochon d’Inde ?";
+    tagline.textContent = defaultTagline;
     document.body.style.background = "#f2f2f7";
     return;
   }
