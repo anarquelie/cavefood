@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .balance-display {
+            text-align: center;
+        }
+
+        .balance-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .balance-amount.negative {
+            color: #e74c3c;
+        }
+
+        .balance-secondary {
+            font-size: 14px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .balance-item {
+            text-align: center;
+        }
+
+        .balance-item-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+
+        .balance-item-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .balance-item-value.available {
+            color: #27ae60;
+        }
+
+        .balance-item-value.pending {
+            color: #f39c12;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .form-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        label .required {
+            color: #e74c3c;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .amount-input-group {
+            position: relative;
+        }
+
+        .amount-input-group input {
+            padding-right: 40px;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-weight: 600;
+        }
+
+        .transaction-list {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .list-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .clear-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-event {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .transaction-comment {
+            font-size: 13px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .transaction-status {
+            margin-left: 5px;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 16px;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        .transaction-amount.positive {
+            color: #27ae60;
+        }
+
+        .transaction-amount.negative {
+            color: #e74c3c;
+        }
+
+        .transaction-balance {
+            font-size: 12px;
+            color: #999;
+            text-align: right;
+            margin-top: 3px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #ececec;
+            border-color: #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                padding-bottom: 80px;
+            }
+
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Balance Display -->
+        <div class="header">
+            <div class="balance-display">
+                <div class="balance-label">Available Balance</div>
+                <div class="balance-amount" id="currentBalance">€0.00</div>
+                <div class="balance-secondary" id="balanceNote">Excluding pending transactions</div>
+                
+                <div class="balance-row">
+                    <div class="balance-item">
+                        <div class="balance-item-label">Pending</div>
+                        <div class="balance-item-value pending" id="pendingAmount">€0.00</div>
+                    </div>
+                    <div class="balance-item">
+                        <div class="balance-item-label">Total</div>
+                        <div class="balance-item-value" id="totalBalance">€0.00</div>
+                    </div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="toggleForm()">+ Add Transaction</button>
+                <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+            </div>
+        </div>
+
+        <!-- Add Transaction Form -->
+        <div class="form-card hidden" id="transactionForm">
+            <div class="form-title">New Transaction</div>
+            <form id="addForm" onsubmit="addTransaction(event)">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" id="dateInput" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Event <span class="required">*</span></label>
+                    <input type="text" id="eventInput" placeholder="e.g., Groceries, Salary..." required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Amount (€) <span class="required">*</span></label>
+                    <div class="amount-input-group">
+                        <input type="number" id="amountInput" step="0.01" placeholder="0.00" required>
+                        <span class="currency-symbol">€</span>
+                    </div>
+                    <small style="color: #999; font-size: 12px;">Use negative for expenses, positive for income</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="statusInput">
+                        <option value="✅">✅ Completed</option>
+                        <option value="⏳">⏳ Pending</option>
+                        <option value="▶️">▶️ In Progress</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Comment</label>
+                    <textarea id="commentInput" placeholder="Optional notes..."></textarea>
+                </div>
+                
+                <div class="controls">
+                    <button type="submit" class="btn btn-primary">Save Transaction</button>
+                    <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Import CSV -->
+        <div class="form-card">
+            <div class="form-title">Import Data</div>
+            <div class="file-input-wrapper">
+                <input type="file" id="csvFileInput" accept=".csv" onchange="importCSV(event)">
+                <label for="csvFileInput" class="file-input-label">
+                    📁 Choose CSV file to import
+                </label>
+            </div>
+        </div>
+
+        <!-- Transaction List -->
+        <div class="transaction-list">
+            <div class="list-header">
+                <div class="list-title">Transactions</div>
+                <button class="clear-btn" onclick="clearAllData()">Clear All</button>
+            </div>
+            <div id="transactionsList">
+                <div class="empty-state">No transactions yet. Add your first one!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transactions = [];
+
+        // Initialize
+        function init() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
+            
+            loadTransactions();
+            renderTransactions();
+            updateBalance();
+        }
+
+        // Toggle form visibility
+        function toggleForm() {
+            const form = document.getElementById('transactionForm');
+            form.classList.toggle('hidden');
+        }
+
+        // Add transaction
+        function addTransaction(event) {
+            event.preventDefault();
+            
+            const date = document.getElementById('dateInput').value;
+            const eventName = document.getElementById('eventInput').value;
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const status = document.getElementById('statusInput').value;
+            const comment = document.getElementById('commentInput').value;
+
+            const transaction = {
+                id: Date.now(),
+                date: date,
+                event: eventName,
+                amount: amount,
+                status: status,
+                comment: comment
+            };
+
+            transactions.push(transaction);
+            saveTransactions();
+            renderTransactions();
+            updateBalance();
+            
+            // Reset form and hide
+            document.getElementById('addForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
+            toggleForm();
+        }
+
+        // Calculate balance
+        function calculateBalance() {
+            const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+            const available = transactions
+                .filter(t => t.status !== '⏳')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const pending = transactions
+                .filter(t => t.status === '⏳')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            return { total, available, pending };
+        }
+
+        // Update balance display
+        function updateBalance() {
+            const { total, available, pending } = calculateBalance();
+            
+            // Available balance (main display)
+            const balanceEl = document.getElementById('currentBalance');
+            balanceEl.textContent = `€${available.toFixed(2)}`;
+            
+            if (available < 0) {
+                balanceEl.classList.add('negative');
+            } else {
+                balanceEl.classList.remove('negative');
+            }
+            
+            // Pending amount
+            const pendingEl = document.getElementById('pendingAmount');
+            pendingEl.textContent = `€${pending.toFixed(2)}`;
+            
+            // Total balance
+            const totalEl = document.getElementById('totalBalance');
+            totalEl.textContent = `€${total.toFixed(2)}`;
+            
+            if (total < 0) {
+                totalEl.style.color = '#e74c3c';
+            } else {
+                totalEl.style.color = '#27ae60';
+            }
+        }
+
+        // Render transactions
+        function renderTransactions() {
+            const container = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state">No transactions yet. Add your first one!</div>';
+                return;
+            }
+
+            // Sort by date (newest first)
+            const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Calculate running balance
+            let runningBalance = 0;
+            const withBalances = sorted.reverse().map(t => {
+                runningBalance += t.amount;
+                return { ...t, balance: runningBalance };
+            }).reverse();
+
+            container.innerHTML = withBalances.map(t => `
+                <div class="transaction-item">
+                    <div class="transaction-info">
+                        <div class="transaction-event">
+                            ${t.event}
+                            <span class="transaction-status">${t.status}</span>
+                        </div>
+                        <div class="transaction-date">${formatDate(t.date)}</div>
+                        ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
+                    </div>
+                    <div>
+                        <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
+                            ${t.amount >= 0 ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}
+                        </div>
+                        <div class="transaction-balance">Balance: €${t.balance.toFixed(2)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Format date for display
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.toLocaleString('en', { month: 'short' });
+            return `${day} ${month}`;
+        }
+
+        // Save to localStorage
+        function saveTransactions() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        // Load from localStorage
+        function loadTransactions() {
+            const saved = localStorage.getItem('transactions');
+            if (saved) {
+                transactions = JSON.parse(saved);
+            }
+        }
+
+        // Import CSV
+        function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                // Skip header row
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        const dateStr = parts[0].trim();
+                        const event = parts[1].trim();
+                        const amount = parseFloat(parts[2]) || 0;
+                        const status = parts[4]?.trim() || '✅';
+                        const comment = parts[5]?.trim() || '';
+
+                        // Parse date (format: "27 Jan")
+                        let date = new Date();
+                        if (dateStr) {
+                            const [day, month] = dateStr.split(' ');
+                            const monthMap = {
+                                'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+                                'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+                            };
+                            date = new Date(2025, monthMap[month] || 0, parseInt(day) || 1);
+                        }
+
+                        transactions.push({
+                            id: Date.now() + i,
+                            date: date.toISOString().split('T')[0],
+                            event: event,
+                            amount: amount,
+                            status: status,
+                            comment: comment
+                        });
+                    }
+                }
+
+                saveTransactions();
+                renderTransactions();
+                updateBalance();
+                
+                // Reset file input
+                event.target.value = '';
+                alert('CSV imported successfully!');
+            };
+            reader.readAsText(file);
+        }
+
+        // Export CSV
+        function exportCSV() {
+            if (transactions.length === 0) {
+                alert('No transactions to export!');
+                return;
+            }
+
+            const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let csv = 'Date,Event,Amount (€),Balance (€),Status,Comment\n';
+            let runningBalance = 0;
+            
+            sorted.forEach(t => {
+                runningBalance += t.amount;
+                const dateFormatted = formatDate(t.date);
+                csv += `${dateFormatted},${t.event},${t.amount},${runningBalance.toFixed(2)},${t.status},${t.comment}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `financial_manager_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to delete all transactions? This cannot be undone.')) {
+                transactions = [];
+                saveTransactions();
+                renderTransactions();
+                updateBalance();
+            }
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
