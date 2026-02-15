@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Manager</title>
+    <title>Cashflow v1</title>
     <style>
         * {
             margin: 0;
@@ -242,6 +242,14 @@
             font-size: 16px;
             font-family: inherit;
             transition: border-color 0.3s;
+            box-sizing: border-box;
+            max-width: 100%;
+        }
+
+        input[type="date"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -469,7 +477,7 @@
                 <form id="addForm" onsubmit="addTransaction(event)">
                     <div class="form-group">
                         <label>Date</label>
-                        <input type="date" id="dateInput" required style="max-width: 100%;">
+                        <input type="date" id="dateInput" required>
                     </div>
                     
                     <div class="form-group">
@@ -954,7 +962,7 @@
             const formulaEl = document.getElementById('balanceFormula');
             if (balanceAfterJustDebit !== null) {
                 const color = balanceAfterJustDebit < 0 ? '#e74c3c' : '#27ae60';
-                formulaEl.innerHTML = `After next Débit: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
+                formulaEl.innerHTML = `Debt: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
             } else {
                 formulaEl.textContent = 'No upcoming Débit différé';
             }
