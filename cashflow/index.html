@@ -523,7 +523,7 @@
         let sheetId = null;
         let transactions = [];
         let showFuture = false; // Toggle for showing future transactions
-        const API_KEY = 'YOUR_API_KEY_HERE'; // User needs to add this
+        const API_KEY = 'AIzaSyA2jJeCUbD9XtynnprnrUoSp7KBQ0_QJVo'; // User needs to add this
 
         // Initialize
         function init() {
@@ -781,25 +781,11 @@
                 ? sortedFuture.slice(0, nextSalaryIndex).reduce((sum, t) => sum + t.amount, 0)
                 : futureTransactions.reduce((sum, t) => sum + t.amount, 0);
             
-            // Find next "Débit différé" - search by name
-            const nextDebitDiffere = sortedFuture.find(t => 
-                t.event.toLowerCase().includes('débit différé') || 
-                t.event.toLowerCase().includes('debit differe')
-            );
-            
-            // Calculate all transactions between today and next debit differe
-            let transactionsUntilDebit = 0;
-            let balanceAfterNextDebit = null;
-            let nextDebitAmount = 0;
-            
-            if (nextDebitDiffere) {
-                const debitDate = new Date(nextDebitDiffere.date);
-                // Get all future transactions up to and including the debit differe date
-                const untilDebit = sortedFuture.filter(t => new Date(t.date) <= debitDate);
-                transactionsUntilDebit = untilDebit.reduce((sum, t) => sum + t.amount, 0);
-                balanceAfterNextDebit = available + transactionsUntilDebit;
-                nextDebitAmount = nextDebitDiffere.amount;
-            }
+            // Find next "Débit différé"
+            const nextDebitDiffere = sortedFuture.find(t => t.event.toLowerCase().includes('débit différé'));
+            const balanceAfterNextDebit = nextDebitDiffere 
+                ? available + pendingUntilSalary
+                : null;
             
             return { 
                 total, 
@@ -807,15 +793,13 @@
                 pendingToday,
                 pendingUntilSalary,
                 balanceAfterNextDebit,
-                transactionsUntilDebit,
-                nextDebitAmount,
                 futureCount: futureTransactions.length
             };
         }
 
         // Update balance display
         function updateBalance() {
-            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
+            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, futureCount } = calculateBalance();
             
             // Available balance (main display)
             const balanceEl = document.getElementById('currentBalance');
@@ -830,9 +814,8 @@
             // Update formula explanation
             const formulaEl = document.getElementById('balanceFormula');
             if (balanceAfterNextDebit !== null) {
-                const difference = transactionsUntilDebit;
-                const color = difference < 0 ? '#e74c3c' : '#27ae60';
-                formulaEl.innerHTML = `€${available.toFixed(2)} <span style="color: ${color};">${difference >= 0 ? '+' : ''}€${difference.toFixed(2)}</span> = €${balanceAfterNextDebit.toFixed(2)}`;
+                const difference = balanceAfterNextDebit - available;
+                formulaEl.textContent = `€${available.toFixed(2)} + €${difference.toFixed(2)} = €${balanceAfterNextDebit.toFixed(2)}`;
             } else {
                 formulaEl.textContent = 'No upcoming Débit différé';
             }
