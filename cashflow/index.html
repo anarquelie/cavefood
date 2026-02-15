@@ -431,7 +431,7 @@
             <!-- Balance Display -->
             <div class="header">
                 <div class="balance-display">
-                    <div class="balance-label">Available Balance (Today)</div>
+                    <div class="balance-label" id="balanceDateLabel">Available Balance</div>
                     <div class="balance-amount" id="currentBalance">€0.00</div>
                     <div class="balance-secondary" id="balanceFormula">Calculating next debit...</div>
                     
@@ -463,7 +463,7 @@
                 <form id="addForm" onsubmit="addTransaction(event)">
                     <div class="form-group">
                         <label>Date</label>
-                        <input type="date" id="dateInput" required>
+                        <input type="date" id="dateInput" required style="max-width: 100%;">
                     </div>
                     
                     <div class="form-group">
@@ -472,12 +472,24 @@
                     </div>
                     
                     <div class="form-group">
+                        <label>Type</label>
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <button type="button" class="btn btn-secondary" id="expenseBtn" onclick="setTransactionType('expense')" style="flex: 1; background: #e74c3c; color: white;">
+                                − Expense
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1;">
+                                + Income
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
                         <label>Amount (€) <span class="required">*</span></label>
                         <div class="amount-input-group">
                             <input type="number" id="amountInput" step="0.01" placeholder="0.00" required>
                             <span class="currency-symbol">€</span>
                         </div>
-                        <small style="color: #999; font-size: 12px;">Use negative for expenses, positive for income</small>
+                        <small style="color: #999; font-size: 12px;" id="amountHint">Expense (will be negative)</small>
                     </div>
                     
                     <div class="form-group">
@@ -520,6 +532,29 @@
         let scriptUrl = null;
         let transactions = [];
         let showFuture = false;
+        let transactionType = 'expense'; // Default to expense
+
+        // Set transaction type
+        function setTransactionType(type) {
+            transactionType = type;
+            const expenseBtn = document.getElementById('expenseBtn');
+            const incomeBtn = document.getElementById('incomeBtn');
+            const hint = document.getElementById('amountHint');
+            
+            if (type === 'expense') {
+                expenseBtn.style.background = '#e74c3c';
+                expenseBtn.style.color = 'white';
+                incomeBtn.style.background = '#e0e0e0';
+                incomeBtn.style.color = '#333';
+                hint.textContent = 'Expense (will be negative)';
+            } else {
+                incomeBtn.style.background = '#27ae60';
+                incomeBtn.style.color = 'white';
+                expenseBtn.style.background = '#e0e0e0';
+                expenseBtn.style.color = '#333';
+                hint.textContent = 'Income (will be positive)';
+            }
+        }
 
         // Initialize
         function init() {
@@ -724,7 +759,15 @@
             
             const date = document.getElementById('dateInput').value;
             const eventName = document.getElementById('eventInput').value;
-            const amount = parseFloat(document.getElementById('amountInput').value);
+            let amount = parseFloat(document.getElementById('amountInput').value);
+            
+            // Apply transaction type (expense = negative, income = positive)
+            if (transactionType === 'expense' && amount > 0) {
+                amount = -amount;
+            } else if (transactionType === 'income' && amount < 0) {
+                amount = Math.abs(amount);
+            }
+            
             const status = document.getElementById('statusInput').value;
             const comment = document.getElementById('commentInput').value;
 
@@ -748,6 +791,7 @@
             document.getElementById('addForm').reset();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
+            setTransactionType('expense'); // Reset to expense default
             toggleForm();
         }
 
@@ -796,13 +840,19 @@
             // Calculate all transactions between today and next debit differe
             let transactionsUntilDebit = 0;
             let balanceAfterNextDebit = null;
+            let balanceAfterJustDebit = null;
             let nextDebitAmount = 0;
             
             if (nextDebitDiffere) {
-                // Just use the debit differe amount itself
+                // For "After Next Débit" - include ALL transactions up to debit date
+                const debitDate = new Date(nextDebitDiffere.date);
+                const untilDebit = sortedFuture.filter(t => new Date(t.date) <= debitDate);
+                transactionsUntilDebit = untilDebit.reduce((sum, t) => sum + t.amount, 0);
+                balanceAfterNextDebit = available + transactionsUntilDebit;
+                
+                // For the formula display - just the debit itself
                 nextDebitAmount = nextDebitDiffere.amount;
-                transactionsUntilDebit = nextDebitAmount;
-                balanceAfterNextDebit = available + nextDebitAmount;
+                balanceAfterJustDebit = available + nextDebitAmount;
             }
             
             return { 
@@ -811,6 +861,7 @@
                 pendingToday,
                 pendingUntilSalary,
                 balanceAfterNextDebit,
+                balanceAfterJustDebit,
                 transactionsUntilDebit,
                 nextDebitAmount,
                 futureCount: futureTransactions.length
@@ -819,7 +870,14 @@
 
         // Update balance display
         function updateBalance() {
-            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
+            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, balanceAfterJustDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
+            
+            // Update balance date label
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            document.getElementById('balanceDateLabel').textContent = `Available Balance on ${dd}/${mm}/${yyyy}`;
             
             // Available balance (main display)
             const balanceEl = document.getElementById('currentBalance');
@@ -831,12 +889,11 @@
                 balanceEl.classList.remove('negative');
             }
             
-            // Update formula explanation
+            // Update formula explanation - just show the result, colored
             const formulaEl = document.getElementById('balanceFormula');
-            if (balanceAfterNextDebit !== null) {
-                const difference = transactionsUntilDebit;
-                const color = difference < 0 ? '#e74c3c' : '#27ae60';
-                formulaEl.innerHTML = `€${available.toFixed(2)} <span style="color: ${color};">${difference >= 0 ? '+' : ''}€${difference.toFixed(2)}</span> = €${balanceAfterNextDebit.toFixed(2)}`;
+            if (balanceAfterJustDebit !== null) {
+                const color = balanceAfterJustDebit < 0 ? '#e74c3c' : '#27ae60';
+                formulaEl.innerHTML = `After next Débit: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
             } else {
                 formulaEl.textContent = 'No upcoming Débit différé';
             }
@@ -908,8 +965,7 @@
                 <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}">
                     <div class="transaction-info">
                         <div class="transaction-event">
-                            ${isFuture ? '🔮 ' : ''}${t.event}
-                            <span class="transaction-status">${t.status}</span>
+                            ${t.status} ${isFuture ? '🔮 ' : ''}${t.event.length > 12 ? t.event.substring(0, 12) + '...' : t.event}
                         </div>
                         <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
                         ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
