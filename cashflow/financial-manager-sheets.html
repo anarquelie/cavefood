@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .setup-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .setup-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .setup-steps {
+            color: #666;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .setup-steps ol {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .setup-steps li {
+            margin-bottom: 8px;
+        }
+
+        .setup-steps code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .auth-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .balance-display {
+            text-align: center;
+        }
+
+        .balance-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .balance-amount.negative {
+            color: #e74c3c;
+        }
+
+        .balance-secondary {
+            font-size: 14px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .balance-item {
+            text-align: center;
+        }
+
+        .balance-item-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+
+        .balance-item-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .balance-item-value.available {
+            color: #27ae60;
+        }
+
+        .balance-item-value.pending {
+            color: #f39c12;
+        }
+
+        .sync-status {
+            text-align: center;
+            padding: 8px;
+            margin-top: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .sync-status.synced {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .sync-status.syncing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .sync-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .form-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        label .required {
+            color: #e74c3c;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .amount-input-group {
+            position: relative;
+        }
+
+        .amount-input-group input {
+            padding-right: 40px;
+        }
+
+        .currency-symbol {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-weight: 600;
+        }
+
+        .transaction-list {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .list-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .transaction-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-event {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .transaction-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .transaction-comment {
+            font-size: 13px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .transaction-status {
+            margin-left: 5px;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 16px;
+            white-space: nowrap;
+            margin-left: 10px;
+            text-align: right;
+        }
+
+        .transaction-amount.positive {
+            color: #27ae60;
+        }
+
+        .transaction-amount.negative {
+            color: #e74c3c;
+        }
+
+        .transaction-balance {
+            font-size: 12px;
+            color: #999;
+            text-align: right;
+            margin-top: 3px;
+        }
+        
+        .transaction-right {
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                padding-bottom: 80px;
+            }
+
+            .balance-amount {
+                font-size: 28px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Setup Instructions (shown only if not connected) -->
+        <div class="setup-card" id="setupCard">
+            <div class="setup-title">📋 Google Sheets Setup</div>
+            <div class="setup-steps">
+                <p><strong>Follow these steps to connect your Google Sheet:</strong></p>
+                <ol>
+                    <li>Create a new Google Sheet with columns: <code>Date | Event | Amount | Completed | Comment</code></li>
+                    <li>Import your CSV data or paste it into the sheet</li>
+                    <li>Click "Share" → Set to "Anyone with the link can edit"</li>
+                    <li>Copy the Sheet ID from the URL (the long string between <code>/d/</code> and <code>/edit</code>)</li>
+                    <li>Paste the Sheet ID below and click Connect</li>
+                </ol>
+                <p style="margin-top: 10px; font-size: 13px; color: #999;">
+                    <strong>Note:</strong> Make sure you've added your API key to the HTML file before connecting!
+                </p>
+            </div>
+            <div class="auth-section">
+                <div class="form-group">
+                    <label>Google Sheet ID <span class="required">*</span></label>
+                    <input type="text" id="sheetIdInput" placeholder="e.g., 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+                </div>
+                <button class="btn btn-success" onclick="connectSheet()">Connect to Google Sheet</button>
+            </div>
+        </div>
+
+        <!-- Main App (shown after connection) -->
+        <div id="mainApp" class="hidden">
+            <!-- Balance Display -->
+            <div class="header">
+                <div class="balance-display">
+                    <div class="balance-label">Available Balance (Today)</div>
+                    <div class="balance-amount" id="currentBalance">€0.00</div>
+                    <div class="balance-secondary">Excluding pending transactions</div>
+                    
+                    <div class="balance-row">
+                        <div class="balance-item">
+                            <div class="balance-item-label">Until Next Salary</div>
+                            <div class="balance-item-value pending" id="pendingAmount">€0.00</div>
+                        </div>
+                        <div class="balance-item">
+                            <div class="balance-item-label">After Next Débit</div>
+                            <div class="balance-item-value" id="afterDebitBalance">€0.00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sync-status synced" id="syncStatus">
+                    ✓ Synced with Google Sheets
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" onclick="toggleForm()">+ Add Transaction</button>
+                    <button class="btn btn-secondary" onclick="refreshFromSheet()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <!-- Add Transaction Form -->
+            <div class="form-card hidden" id="transactionForm">
+                <div class="form-title">New Transaction</div>
+                <form id="addForm" onsubmit="addTransaction(event)">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="dateInput" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Event <span class="required">*</span></label>
+                        <input type="text" id="eventInput" placeholder="e.g., Groceries, Salary..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Amount (€) <span class="required">*</span></label>
+                        <div class="amount-input-group">
+                            <input type="number" id="amountInput" step="0.01" placeholder="0.00" required>
+                            <span class="currency-symbol">€</span>
+                        </div>
+                        <small style="color: #999; font-size: 12px;">Use negative for expenses, positive for income</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="statusInput">
+                            <option value="✅">✅ Completed</option>
+                            <option value="⏳">⏳ Pending</option>
+                            <option value="▶️">▶️ In Progress</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Comment</label>
+                        <textarea id="commentInput" placeholder="Optional notes..."></textarea>
+                    </div>
+                    
+                    <div class="controls">
+                        <button type="submit" class="btn btn-primary">Save to Google Sheet</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Transaction List -->
+            <div class="transaction-list">
+                <div class="list-header">
+                    <div class="list-title">Transactions</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
+                            Show Future (<span id="futureCount">0</span>)
+                        </button>
+                        <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="disconnectSheet()">Disconnect</button>
+                    </div>
+                </div>
+                <div id="transactionsList">
+                    <div class="empty-state">Loading from Google Sheets...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sheetId = null;
+        let transactions = [];
+        let showFuture = false; // Toggle for showing future transactions
+        const API_KEY = 'AIzaSyA2jJeCUbD9XtynnprnrUoSp7KBQ0_QJVo'; // User needs to add this
+
+        // Initialize
+        function init() {
+            const savedSheetId = localStorage.getItem('sheetId');
+            if (savedSheetId) {
+                sheetId = savedSheetId;
+                document.getElementById('setupCard').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                loadFromSheet();
+            }
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
+        }
+
+        // Connect to Google Sheet
+        function connectSheet() {
+            const inputSheetId = document.getElementById('sheetIdInput').value.trim();
+            
+            if (!inputSheetId) {
+                alert('Please enter a Sheet ID');
+                return;
+            }
+
+            sheetId = inputSheetId;
+            localStorage.setItem('sheetId', sheetId);
+            
+            document.getElementById('setupCard').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            loadFromSheet();
+        }
+
+        // Disconnect from sheet
+        function disconnectSheet() {
+            if (confirm('Disconnect from Google Sheet? Your data will remain in the sheet.')) {
+                sheetId = null;
+                localStorage.removeItem('sheetId');
+                location.reload();
+            }
+        }
+
+        // Load data from Google Sheet
+        async function loadFromSheet() {
+            if (!sheetId) return;
+            
+            updateSyncStatus('syncing', 'Loading from Google Sheets...');
+            
+            try {
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:E?key=${API_KEY}`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load sheet. Check Sheet ID and permissions.');
+                }
+                
+                const data = await response.json();
+                const rows = data.values || [];
+                
+                transactions = rows.map((row, index) => {
+                    // Parse date (ISO format: "2026-01-27")
+                    const date = new Date(row[0] || new Date());
+                    
+                    // Parse completed status (True/False → emoji)
+                    const completed = row[3];
+                    let status = '✅'; // default completed
+                    if (completed === 'False' || completed === false || completed === 'false') {
+                        status = '⏳'; // pending
+                    }
+                    
+                    return {
+                        id: index,
+                        date: date.toISOString().split('T')[0],
+                        event: row[1] || '',
+                        amount: parseFloat(row[2]) || 0,
+                        status: status,
+                        comment: row[4] || ''
+                    };
+                });
+                
+                renderTransactions();
+                updateBalance();
+                updateSyncStatus('synced', '✓ Synced with Google Sheets');
+                
+            } catch (error) {
+                console.error('Error loading sheet:', error);
+                updateSyncStatus('error', '⚠ Error loading sheet: ' + error.message);
+            }
+        }
+
+        // Save to Google Sheet
+        async function saveToSheet() {
+            if (!sheetId) return;
+            
+            updateSyncStatus('syncing', 'Saving to Google Sheets...');
+            
+            try {
+                // Sort by date
+                const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Calculate running balance (not saved to sheet, calculated on display)
+                const rows = sorted.map(t => {
+                    // Convert emoji status back to True/False
+                    const completed = (t.status === '✅' || t.status === '▶️') ? 'True' : 'False';
+                    
+                    return [
+                        t.date,           // ISO format date
+                        t.event,
+                        t.amount,
+                        completed,        // True/False
+                        t.comment
+                    ];
+                });
+                
+                // Add header
+                rows.unshift(['Date', 'Event', 'Amount', 'Completed', 'Comment']);
+                
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A1:E?valueInputOption=RAW&key=${API_KEY}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            values: rows
+                        })
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Failed to save to sheet');
+                }
+                
+                updateSyncStatus('synced', '✓ Saved to Google Sheets');
+                
+            } catch (error) {
+                console.error('Error saving to sheet:', error);
+                updateSyncStatus('error', '⚠ Error saving: ' + error.message);
+            }
+        }
+
+        // Update sync status
+        function updateSyncStatus(status, message) {
+            const statusEl = document.getElementById('syncStatus');
+            statusEl.className = `sync-status ${status}`;
+            statusEl.textContent = message;
+        }
+
+        // Refresh from sheet
+        function refreshFromSheet() {
+            loadFromSheet();
+        }
+
+        // Toggle form visibility
+        function toggleForm() {
+            const form = document.getElementById('transactionForm');
+            form.classList.toggle('hidden');
+        }
+
+        // Add transaction
+        async function addTransaction(event) {
+            event.preventDefault();
+            
+            const date = document.getElementById('dateInput').value;
+            const eventName = document.getElementById('eventInput').value;
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const status = document.getElementById('statusInput').value;
+            const comment = document.getElementById('commentInput').value;
+
+            const transaction = {
+                id: Date.now(),
+                date: date,
+                event: eventName,
+                amount: amount,
+                status: status,
+                comment: comment
+            };
+
+            transactions.push(transaction);
+            renderTransactions();
+            updateBalance();
+            
+            // Save to Google Sheet
+            await saveToSheet();
+            
+            // Reset form and hide
+            document.getElementById('addForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateInput').value = today;
+            toggleForm();
+        }
+
+        // Calculate balance
+        function calculateBalance() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+            
+            // Only include transactions up to today
+            const todayTransactions = transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                transactionDate.setHours(0, 0, 0, 0);
+                return transactionDate <= today;
+            });
+            
+            // Future transactions
+            const futureTransactions = transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                transactionDate.setHours(0, 0, 0, 0);
+                return transactionDate > today;
+            });
+            
+            const total = todayTransactions.reduce((sum, t) => sum + t.amount, 0);
+            const available = todayTransactions
+                .filter(t => t.status !== '⏳')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const pendingToday = todayTransactions
+                .filter(t => t.status === '⏳')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            // Find next salary (future transactions with positive amount)
+            const sortedFuture = [...futureTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const nextSalaryIndex = sortedFuture.findIndex(t => t.amount > 0 && t.event.toLowerCase().includes('salary'));
+            
+            // Pending until next salary (or all future if no salary)
+            const pendingUntilSalary = nextSalaryIndex >= 0
+                ? sortedFuture.slice(0, nextSalaryIndex).reduce((sum, t) => sum + t.amount, 0)
+                : futureTransactions.reduce((sum, t) => sum + t.amount, 0);
+            
+            // Find next "Débit différé"
+            const nextDebitDiffere = sortedFuture.find(t => t.event.toLowerCase().includes('débit différé'));
+            const balanceAfterNextDebit = nextDebitDiffere 
+                ? available + pendingUntilSalary
+                : null;
+            
+            return { 
+                total, 
+                available, 
+                pendingToday,
+                pendingUntilSalary,
+                balanceAfterNextDebit,
+                futureCount: futureTransactions.length
+            };
+        }
+
+        // Update balance display
+        function updateBalance() {
+            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, futureCount } = calculateBalance();
+            
+            // Available balance (main display)
+            const balanceEl = document.getElementById('currentBalance');
+            balanceEl.textContent = `€${available.toFixed(2)}`;
+            
+            if (available < 0) {
+                balanceEl.classList.add('negative');
+            } else {
+                balanceEl.classList.remove('negative');
+            }
+            
+            // Pending until next salary
+            const pendingEl = document.getElementById('pendingAmount');
+            pendingEl.textContent = `€${pendingUntilSalary.toFixed(2)}`;
+            
+            // Balance after next débit différé
+            const afterDebitEl = document.getElementById('afterDebitBalance');
+            if (balanceAfterNextDebit !== null) {
+                afterDebitEl.textContent = `€${balanceAfterNextDebit.toFixed(2)}`;
+                if (balanceAfterNextDebit < 0) {
+                    afterDebitEl.style.color = '#e74c3c';
+                } else {
+                    afterDebitEl.style.color = '#27ae60';
+                }
+            } else {
+                afterDebitEl.textContent = 'N/A';
+                afterDebitEl.style.color = '#999';
+            }
+            
+            // Update future count
+            document.getElementById('futureCount').textContent = futureCount;
+        }
+
+        // Render transactions
+        function renderTransactions() {
+            const container = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state">No transactions yet. Add your first one!</div>';
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            // Filter transactions based on showFuture toggle
+            let displayTransactions;
+            if (showFuture) {
+                displayTransactions = transactions; // Show all
+            } else {
+                // Show only up to today
+                displayTransactions = transactions.filter(t => {
+                    const transactionDate = new Date(t.date);
+                    transactionDate.setHours(0, 0, 0, 0);
+                    return transactionDate <= today;
+                });
+            }
+
+            // Sort by date (newest first)
+            const sorted = [...displayTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Calculate running balance (only up to each transaction's date)
+            const withBalances = sorted.reverse().map(t => {
+                const upToDate = transactions.filter(tx => {
+                    return new Date(tx.date) <= new Date(t.date);
+                }).reduce((sum, tx) => sum + tx.amount, 0);
+                return { ...t, balance: upToDate };
+            }).reverse();
+
+            container.innerHTML = withBalances.map(t => {
+                const transactionDate = new Date(t.date);
+                transactionDate.setHours(0, 0, 0, 0);
+                const isFuture = transactionDate > today;
+                
+                return `
+                <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}">
+                    <div class="transaction-info">
+                        <div class="transaction-event">
+                            ${isFuture ? '🔮 ' : ''}${t.event}
+                            <span class="transaction-status">${t.status}</span>
+                        </div>
+                        <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
+                        ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
+                    </div>
+                    <div class="transaction-right">
+                        <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
+                            ${t.amount >= 0 ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}
+                        </div>
+                        <div class="transaction-balance">Balance: €${t.balance.toFixed(2)}</div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+        
+        // Toggle future transactions visibility
+        function toggleFutureTransactions() {
+            showFuture = !showFuture;
+            const btn = document.getElementById('futureToggleBtn');
+            const futureCount = calculateBalance().futureCount;
+            
+            // Update button text while preserving the count span
+            if (showFuture) {
+                btn.innerHTML = `Hide Future (<span id="futureCount">${futureCount}</span>)`;
+            } else {
+                btn.innerHTML = `Show Future (<span id="futureCount">${futureCount}</span>)`;
+            }
+            
+            renderTransactions();
+        }
+
+        // Format date for display
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const day = date.getDate();
+            const month = date.toLocaleString('en', { month: 'short' });
+            return `${day} ${month}`;
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>
