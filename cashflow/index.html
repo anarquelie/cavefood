@@ -441,7 +441,7 @@
                             <div class="balance-item-value pending" id="pendingAmount">€0.00</div>
                         </div>
                         <div class="balance-item">
-                            <div class="balance-item-label">Debt</div>
+                            <div class="balance-item-label">After Next Débit</div>
                             <div class="balance-item-value" id="afterDebitBalance">€0.00</div>
                         </div>
                     </div>
@@ -893,7 +893,7 @@
             const formulaEl = document.getElementById('balanceFormula');
             if (balanceAfterJustDebit !== null) {
                 const color = balanceAfterJustDebit < 0 ? '#e74c3c' : '#27ae60';
-                formulaEl.innerHTML = `After next Débit: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
+                formulaEl.innerHTML = `Bank Debt: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
             } else {
                 formulaEl.textContent = 'No upcoming Débit différé';
             }
