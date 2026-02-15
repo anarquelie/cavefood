@@ -297,6 +297,12 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .transaction-item:hover {
+            background: #f9f9f9;
         }
 
         .transaction-item:last-child {
@@ -507,7 +513,7 @@
                     </div>
                     
                     <div class="controls">
-                        <button type="submit" class="btn btn-primary">Save to Google Sheet</button>
+                        <button type="submit" class="btn btn-primary" id="saveBtn">Save to Google Sheet</button>
                         <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
                     </div>
                 </form>
@@ -533,6 +539,7 @@
         let transactions = [];
         let showFuture = false;
         let transactionType = 'expense'; // Default to expense
+        let editingTransactionId = null; // Track which transaction is being edited
 
         // Set transaction type
         function setTransactionType(type) {
@@ -751,9 +758,44 @@
         function toggleForm() {
             const form = document.getElementById('transactionForm');
             form.classList.toggle('hidden');
+            
+            // Reset editing state if closing form
+            if (form.classList.contains('hidden')) {
+                editingTransactionId = null;
+                document.querySelector('.form-title').textContent = 'New Transaction';
+                document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
+            }
         }
 
-        // Add transaction
+        // Edit transaction
+        function editTransaction(transactionId) {
+            const transaction = transactions.find(t => t.id === transactionId);
+            if (!transaction) return;
+            
+            // Populate form
+            document.getElementById('dateInput').value = transaction.date;
+            document.getElementById('eventInput').value = transaction.event;
+            document.getElementById('amountInput').value = Math.abs(transaction.amount);
+            document.getElementById('statusInput').value = transaction.status;
+            document.getElementById('commentInput').value = transaction.comment;
+            
+            // Set transaction type based on amount
+            if (transaction.amount < 0) {
+                setTransactionType('expense');
+            } else {
+                setTransactionType('income');
+            }
+            
+            // Update form title, button text, and tracking
+            editingTransactionId = transactionId;
+            document.querySelector('.form-title').textContent = 'Edit Transaction';
+            document.getElementById('saveBtn').textContent = 'Update Transaction';
+            
+            // Show form
+            document.getElementById('transactionForm').classList.remove('hidden');
+        }
+
+        // Add or update transaction
         async function addTransaction(event) {
             event.preventDefault();
             
@@ -771,16 +813,33 @@
             const status = document.getElementById('statusInput').value;
             const comment = document.getElementById('commentInput').value;
 
-            const transaction = {
-                id: Date.now(),
-                date: date,
-                event: eventName,
-                amount: amount,
-                status: status,
-                comment: comment
-            };
+            if (editingTransactionId !== null) {
+                // Update existing transaction
+                const index = transactions.findIndex(t => t.id === editingTransactionId);
+                if (index !== -1) {
+                    transactions[index] = {
+                        ...transactions[index],
+                        date: date,
+                        event: eventName,
+                        amount: amount,
+                        status: status,
+                        comment: comment
+                    };
+                }
+                editingTransactionId = null;
+            } else {
+                // Add new transaction
+                const transaction = {
+                    id: Date.now(),
+                    date: date,
+                    event: eventName,
+                    amount: amount,
+                    status: status,
+                    comment: comment
+                };
+                transactions.push(transaction);
+            }
 
-            transactions.push(transaction);
             renderTransactions();
             updateBalance();
             
@@ -792,6 +851,8 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
             setTransactionType('expense'); // Reset to expense default
+            document.querySelector('.form-title').textContent = 'New Transaction';
+            document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
             toggleForm();
         }
 
@@ -893,7 +954,7 @@
             const formulaEl = document.getElementById('balanceFormula');
             if (balanceAfterJustDebit !== null) {
                 const color = balanceAfterJustDebit < 0 ? '#e74c3c' : '#27ae60';
-                formulaEl.innerHTML = `Bank Debt: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
+                formulaEl.innerHTML = `After next Débit: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
             } else {
                 formulaEl.textContent = 'No upcoming Débit différé';
             }
@@ -962,7 +1023,7 @@
                 const isFuture = transactionDate > today;
                 
                 return `
-                <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}">
+                <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}" onclick="editTransaction(${t.id})">
                     <div class="transaction-info">
                         <div class="transaction-event">
                             ${t.status} ${isFuture ? '🔮 ' : ''}${t.event.length > 12 ? t.event.substring(0, 12) + '...' : t.event}
