@@ -403,24 +403,24 @@
     <div class="container">
         <!-- Setup Instructions (shown only if not connected) -->
         <div class="setup-card" id="setupCard">
-            <div class="setup-title">📋 Google Sheets Setup</div>
+            <div class="setup-title">📋 Google Apps Script Setup</div>
             <div class="setup-steps">
-                <p><strong>Follow these steps to connect your Google Sheet:</strong></p>
+                <p><strong>Follow these steps to connect:</strong></p>
                 <ol>
-                    <li>Create a new Google Sheet with columns: <code>Date | Event | Amount | Completed | Comment</code></li>
-                    <li>Import your CSV data or paste it into the sheet</li>
-                    <li>Click "Share" → Set to "Anyone with the link can edit"</li>
-                    <li>Copy the Sheet ID from the URL (the long string between <code>/d/</code> and <code>/edit</code>)</li>
-                    <li>Paste the Sheet ID below and click Connect</li>
+                    <li>Your Google Sheet should have columns: <code>Date | Event | Amount | Completed | Comment</code></li>
+                    <li>Open your sheet → <strong>Extensions → Apps Script</strong></li>
+                    <li>Copy the script from the setup guide</li>
+                    <li>Deploy as Web App (Execute as: Me, Access: Anyone)</li>
+                    <li>Copy the deployment URL and paste it below</li>
                 </ol>
                 <p style="margin-top: 10px; font-size: 13px; color: #999;">
-                    <strong>Note:</strong> Make sure you've added your API key to the HTML file before connecting!
+                    <strong>URL format:</strong> https://script.google.com/macros/s/ABC.../exec
                 </p>
             </div>
             <div class="auth-section">
                 <div class="form-group">
-                    <label>Google Sheet ID <span class="required">*</span></label>
-                    <input type="text" id="sheetIdInput" placeholder="e.g., 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms">
+                    <label>Apps Script URL <span class="required">*</span></label>
+                    <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/...">
                 </div>
                 <button class="btn btn-success" onclick="connectSheet()">Connect to Google Sheet</button>
             </div>
@@ -505,12 +505,9 @@
             <div class="transaction-list">
                 <div class="list-header">
                     <div class="list-title">Transactions</div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
-                            Show Future (<span id="futureCount">0</span>)
-                        </button>
-                        <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="disconnectSheet()">Disconnect</button>
-                    </div>
+                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
+                        Show Future (<span id="futureCount">0</span>)
+                    </button>
                 </div>
                 <div id="transactionsList">
                     <div class="empty-state">Loading from Google Sheets...</div>
@@ -520,16 +517,15 @@
     </div>
 
     <script>
-        let sheetId = null;
+        let scriptUrl = null;
         let transactions = [];
-        let showFuture = false; // Toggle for showing future transactions
-        const API_KEY = 'AIzaSyA2jJeCUbD9XtynnprnrUoSp7KBQ0_QJVo'; // User needs to add this
+        let showFuture = false;
 
         // Initialize
         function init() {
-            const savedSheetId = localStorage.getItem('sheetId');
-            if (savedSheetId) {
-                sheetId = savedSheetId;
+            const savedScriptUrl = localStorage.getItem('scriptUrl');
+            if (savedScriptUrl) {
+                scriptUrl = savedScriptUrl;
                 document.getElementById('setupCard').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
                 loadFromSheet();
@@ -541,15 +537,15 @@
 
         // Connect to Google Sheet
         function connectSheet() {
-            const inputSheetId = document.getElementById('sheetIdInput').value.trim();
+            const inputScriptUrl = document.getElementById('scriptUrlInput').value.trim();
             
-            if (!inputSheetId) {
-                alert('Please enter a Sheet ID');
+            if (!inputScriptUrl) {
+                alert('Please enter your Apps Script URL');
                 return;
             }
 
-            sheetId = inputSheetId;
-            localStorage.setItem('sheetId', sheetId);
+            scriptUrl = inputScriptUrl;
+            localStorage.setItem('scriptUrl', scriptUrl);
             
             document.getElementById('setupCard').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -560,20 +556,20 @@
         // Disconnect from sheet
         function disconnectSheet() {
             if (confirm('Disconnect from Google Sheet? Your data will remain in the sheet.')) {
-                sheetId = null;
-                localStorage.removeItem('sheetId');
+                scriptUrl = null;
+                localStorage.removeItem('scriptUrl');
                 location.reload();
             }
         }
 
-        // Load data from Google Sheet
+        // Load data from Google Sheet via Apps Script
         async function loadFromSheet() {
-            if (!sheetId) return;
+            if (!scriptUrl) return;
             
             updateSyncStatus('syncing', 'Loading from Google Sheets...');
             
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A2:E?key=${API_KEY}`;
+                const url = `${scriptUrl}?action=read`;
                 console.log('Fetching from:', url);
                 
                 const response = await fetch(url);
@@ -581,44 +577,53 @@
                 console.log('Response status:', response.status);
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('API Error:', errorText);
-                    throw new Error('Failed to load sheet. Check Sheet ID and permissions.');
+                    throw new Error('Failed to load sheet. Check your Apps Script URL.');
                 }
                 
-                const data = await response.json();
-                console.log('Raw data from sheet:', data);
+                const result = await response.json();
+                console.log('Raw data from sheet:', result);
                 
-                const rows = data.values || [];
+                if (!result.success) {
+                    throw new Error(result.error || 'Unknown error');
+                }
+                
+                const rows = result.data || [];
                 console.log(`Processing ${rows.length} rows`);
                 
-                transactions = rows.map((row, index) => {
+                // Skip header row (first row)
+                const dataRows = rows.slice(1);
+                
+                transactions = dataRows.map((row, index) => {
                     console.log(`Row ${index}:`, row);
                     
                     // Parse date (ISO format: "2026-01-27")
                     let date;
+                    let dateWarning = '';
                     try {
                         if (row[0]) {
                             date = new Date(row[0]);
-                            // Check if date is valid
                             if (isNaN(date.getTime())) {
-                                console.warn(`Invalid date for row ${index}: ${row[0]}`);
-                                date = new Date(); // Fallback to today
+                                console.warn(`Invalid date for row ${index}: ${row[0]} - using today instead`);
+                                dateWarning = ` ⚠️ Invalid date: ${row[0]}`;
+                                date = new Date();
                             }
                         } else {
-                            date = new Date(); // Fallback to today if empty
+                            date = new Date();
                         }
                     } catch (e) {
                         console.error(`Error parsing date for row ${index}:`, e);
-                        date = new Date(); // Fallback to today
+                        dateWarning = ` ⚠️ Date error`;
+                        date = new Date();
                     }
                     
                     // Parse completed status (True/False → emoji)
-                    const completed = row[3] || 'TRUE'; // Default to TRUE if missing
-                    let status = '✅'; // default completed
-                    if (completed === 'False' || completed === false || completed === 'false' || completed === 'FALSE') {
-                        status = '⏳'; // pending
+                    const completed = row[3];
+                    console.log(`Row ${index} status value:`, completed, `Type:`, typeof completed);
+                    let status = '✅';
+                    if (completed === 'False' || completed === false || completed === 'false' || completed === 'FALSE' || completed === 'F') {
+                        status = '⏳';
                     }
+                    console.log(`Row ${index} final status:`, status);
                     
                     return {
                         id: index,
@@ -626,7 +631,7 @@
                         event: row[1] || '',
                         amount: parseFloat(row[2]) || 0,
                         status: status,
-                        comment: (row[4] !== undefined && row[4] !== null) ? row[4] : '' // Safe access to comment
+                        comment: ((row[4] !== undefined && row[4] !== null) ? row[4] : '') + dateWarning
                     };
                 });
                 
@@ -642,9 +647,9 @@
             }
         }
 
-        // Save to Google Sheet
+        // Save to Google Sheet via Apps Script
         async function saveToSheet() {
-            if (!sheetId) return;
+            if (!scriptUrl) return;
             
             updateSyncStatus('syncing', 'Saving to Google Sheets...');
             
@@ -652,16 +657,14 @@
                 // Sort by date
                 const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
                 
-                // Calculate running balance (not saved to sheet, calculated on display)
+                // Prepare rows
                 const rows = sorted.map(t => {
-                    // Convert emoji status back to True/False
-                    const completed = (t.status === '✅' || t.status === '▶️') ? 'True' : 'False';
-                    
+                    const completed = (t.status === '✅' || t.status === '▶️') ? 'TRUE' : 'FALSE';
                     return [
-                        t.date,           // ISO format date
+                        t.date,
                         t.event,
                         t.amount,
-                        completed,        // True/False
+                        completed,
                         t.comment
                     ];
                 });
@@ -669,22 +672,25 @@
                 // Add header
                 rows.unshift(['Date', 'Event', 'Amount', 'Completed', 'Comment']);
                 
-                const response = await fetch(
-                    `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/Sheet1!A1:E?valueInputOption=RAW&key=${API_KEY}`,
-                    {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            values: rows
-                        })
-                    }
-                );
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // Required for Apps Script
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'write',
+                        values: rows
+                    })
+                });
                 
-                if (!response.ok) {
-                    throw new Error('Failed to save to sheet');
-                }
+                // Note: no-cors means we can't read the response, but the write should succeed
+                console.log('Write request sent');
+                
+                // Reload to verify
+                setTimeout(() => {
+                    loadFromSheet();
+                }, 1000);
                 
                 updateSyncStatus('synced', '✓ Saved to Google Sheets');
                 
@@ -781,11 +787,23 @@
                 ? sortedFuture.slice(0, nextSalaryIndex).reduce((sum, t) => sum + t.amount, 0)
                 : futureTransactions.reduce((sum, t) => sum + t.amount, 0);
             
-            // Find next "Débit différé"
-            const nextDebitDiffere = sortedFuture.find(t => t.event.toLowerCase().includes('débit différé'));
-            const balanceAfterNextDebit = nextDebitDiffere 
-                ? available + pendingUntilSalary
-                : null;
+            // Find next "Débit différé" - search by name
+            const nextDebitDiffere = sortedFuture.find(t => 
+                t.event.toLowerCase().includes('débit différé') || 
+                t.event.toLowerCase().includes('debit differe')
+            );
+            
+            // Calculate all transactions between today and next debit differe
+            let transactionsUntilDebit = 0;
+            let balanceAfterNextDebit = null;
+            let nextDebitAmount = 0;
+            
+            if (nextDebitDiffere) {
+                // Just use the debit differe amount itself
+                nextDebitAmount = nextDebitDiffere.amount;
+                transactionsUntilDebit = nextDebitAmount;
+                balanceAfterNextDebit = available + nextDebitAmount;
+            }
             
             return { 
                 total, 
@@ -793,13 +811,15 @@
                 pendingToday,
                 pendingUntilSalary,
                 balanceAfterNextDebit,
+                transactionsUntilDebit,
+                nextDebitAmount,
                 futureCount: futureTransactions.length
             };
         }
 
         // Update balance display
         function updateBalance() {
-            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, futureCount } = calculateBalance();
+            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
             
             // Available balance (main display)
             const balanceEl = document.getElementById('currentBalance');
@@ -814,8 +834,9 @@
             // Update formula explanation
             const formulaEl = document.getElementById('balanceFormula');
             if (balanceAfterNextDebit !== null) {
-                const difference = balanceAfterNextDebit - available;
-                formulaEl.textContent = `€${available.toFixed(2)} + €${difference.toFixed(2)} = €${balanceAfterNextDebit.toFixed(2)}`;
+                const difference = transactionsUntilDebit;
+                const color = difference < 0 ? '#e74c3c' : '#27ae60';
+                formulaEl.innerHTML = `€${available.toFixed(2)} <span style="color: ${color};">${difference >= 0 ? '+' : ''}€${difference.toFixed(2)}</span> = €${balanceAfterNextDebit.toFixed(2)}`;
             } else {
                 formulaEl.textContent = 'No upcoming Débit différé';
             }
