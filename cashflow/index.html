@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cashflow v1</title>
+    <title>Financial Manager</title>
     <style>
         * {
             margin: 0;
@@ -135,11 +135,15 @@
 
         .sync-status {
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             margin-top: 10px;
             border-radius: 6px;
             font-size: 12px;
             font-weight: 500;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .sync-status.synced {
@@ -491,7 +495,7 @@
                             <button type="button" class="btn btn-secondary" id="expenseBtn" onclick="setTransactionType('expense')" style="flex: 1; background: #e74c3c; color: white;">
                                 − Expense
                             </button>
-                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1;">
+                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1; background: #27ae60; color: white;">
                                 + Income
                             </button>
                         </div>
@@ -510,8 +514,7 @@
                         <label>Status</label>
                         <select id="statusInput">
                             <option value="✅">✅ Completed</option>
-                            <option value="⏳">⏳ Pending</option>
-                            <option value="▶️">▶️ In Progress</option>
+                            <option value="⏳">⏳ Expected</option>
                         </select>
                     </div>
                     
