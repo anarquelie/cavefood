@@ -416,6 +416,12 @@
             .controls {
                 flex-direction: column;
             }
+            
+            #expenseChart {
+                width: 100% !important;
+                height: auto !important;
+                max-width: 350px !important;
+            }
         }
     </style>
 </head>
@@ -458,12 +464,11 @@
                 <div class="balance-display">
                     <div class="balance-label" id="balanceDateLabel">My Money</div>
                     <div class="balance-amount" id="myMoneyBalance">€0.00</div>
-                    <div class="balance-secondary" id="availableBalanceLabel">Available in account: €0.00</div>
                     
                     <div class="balance-row">
                         <div class="balance-item">
-                            <div class="balance-item-label">Upcoming this month</div>
-                            <div class="balance-item-value pending" id="pendingAmount">€0.00</div>
+                            <div class="balance-item-label">Available in account</div>
+                            <div class="balance-item-value" id="availableAmount">€0.00</div>
                         </div>
                         <div class="balance-item">
                             <div class="balance-item-label">After Next Débit</div>
@@ -553,8 +558,8 @@
                     <div class="list-title">Expense Statistics</div>
                 </div>
                 <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: center; margin-bottom: 30px;">
-                        <canvas id="expenseChart" width="800" height="800" style="max-width: 400px; max-height: 400px;"></canvas>
+                    <div style="display: flex; justify-content: center; margin-bottom: 30px; overflow: hidden;">
+                        <canvas id="expenseChart" width="800" height="800" style="max-width: 100%; max-height: 400px; width: 400px; height: 400px;"></canvas>
                     </div>
                     <div id="categoryBreakdown"></div>
                 </div>
@@ -715,7 +720,7 @@
             const canvas = ctx.canvas;
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 40;
+            const radius = Math.min(centerX, centerY) - 80;
             
             // Emoji mapping
             const emojis = {
@@ -741,12 +746,14 @@
                 ctx.fillStyle = colors[labels[index]];
                 ctx.fill();
                 
-                // Draw emoji label
+                // Draw emoji label - much larger
                 const labelAngle = currentAngle + sliceAngle / 2;
-                const labelX = centerX + (radius * 0.7) * Math.cos(labelAngle);
-                const labelY = centerY + (radius * 0.7) * Math.sin(labelAngle);
+                const labelX = centerX + (radius * 0.65) * Math.cos(labelAngle);
+                const labelY = centerY + (radius * 0.65) * Math.sin(labelAngle);
                 
-                ctx.font = '32px sans-serif';
+                // Larger emoji size based on canvas size
+                const emojiSize = Math.floor(canvas.width / 12); // Responsive emoji size
+                ctx.font = `${emojiSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(emojis[labels[index]] || '❓', labelX, labelY);
@@ -1216,14 +1223,10 @@
                 myMoneyEl.style.color = '#27ae60';
             }
             
-            // Available balance (secondary) - what's in the account now
-            const availableLabel = document.getElementById('availableBalanceLabel');
-            availableLabel.textContent = `Available in account: €${available.toFixed(2)}`;
-            availableLabel.style.color = '#999';
-            
-            // Upcoming this month
-            const pendingEl = document.getElementById('pendingAmount');
-            pendingEl.textContent = `€${upcomingThisMonth.toFixed(2)}`;
+            // Available in account (in the balance row)
+            const availableEl = document.getElementById('availableAmount');
+            availableEl.textContent = `€${available.toFixed(2)}`;
+            availableEl.style.color = available < 0 ? '#e74c3c' : '#667eea';
             
             // Balance after next débit différé (all transactions until debit)
             const afterDebitEl = document.getElementById('afterDebitBalance');
@@ -1271,24 +1274,35 @@
             // Sort by date (newest first)
             const sorted = [...displayTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
             
+            // Category emoji mapping
+            const categoryEmojis = {
+                'Living': '🏠',
+                'Food': '🍔',
+                'Services': '💳',
+                'Income': '💰',
+                'Other': '✨'
+            };
+            
             // Calculate running balance (only up to each transaction's date)
             const withBalances = sorted.reverse().map(t => {
                 const upToDate = transactions.filter(tx => {
                     return new Date(tx.date) <= new Date(t.date);
                 }).reduce((sum, tx) => sum + tx.amount, 0);
-                return { ...t, balance: upToDate };
+                const category = categorizeTransaction(t.event, t.amount);
+                return { ...t, balance: upToDate, category: category };
             }).reverse();
 
             container.innerHTML = withBalances.map(t => {
                 const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const isFuture = transactionDate > today;
+                const categoryEmoji = categoryEmojis[t.category] || '❓';
                 
                 return `
                 <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}" onclick="editTransaction(${t.id})">
                     <div class="transaction-info">
                         <div class="transaction-event">
-                            ${t.status} ${t.event.length > 12 ? t.event.substring(0, 12) + '...' : t.event}
+                            ${categoryEmoji} ${t.event.length > 12 ? t.event.substring(0, 12) + '...' : t.event}
                         </div>
                         <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
                         ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
