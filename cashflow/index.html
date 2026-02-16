@@ -134,16 +134,18 @@
         }
 
         .sync-status {
+            background: white;
             text-align: center;
             padding: 12px;
-            margin-top: 10px;
-            border-radius: 6px;
+            margin-bottom: 20px;
+            border-radius: 8px;
             font-size: 12px;
             font-weight: 500;
             min-height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .sync-status.synced {
@@ -446,16 +448,21 @@
 
         <!-- Main App (shown after connection) -->
         <div id="mainApp" class="hidden">
+            <!-- Sync Status -->
+            <div class="sync-status synced" id="syncStatus">
+                ✓ Synced with Google Sheets
+            </div>
+            
             <!-- Balance Display -->
             <div class="header">
                 <div class="balance-display">
-                    <div class="balance-label" id="balanceDateLabel">Available Balance</div>
-                    <div class="balance-amount" id="currentBalance">€0.00</div>
-                    <div class="balance-secondary" id="balanceFormula">Calculating next debit...</div>
+                    <div class="balance-label" id="balanceDateLabel">My Money</div>
+                    <div class="balance-amount" id="myMoneyBalance">€0.00</div>
+                    <div class="balance-secondary" id="availableBalanceLabel">Available in account: €0.00</div>
                     
                     <div class="balance-row">
                         <div class="balance-item">
-                            <div class="balance-item-label">Until Next Salary</div>
+                            <div class="balance-item-label">Upcoming this month</div>
                             <div class="balance-item-value pending" id="pendingAmount">€0.00</div>
                         </div>
                         <div class="balance-item">
@@ -465,12 +472,9 @@
                     </div>
                 </div>
                 
-                <div class="sync-status synced" id="syncStatus">
-                    ✓ Synced with Google Sheets
-                </div>
-                
                 <div class="controls">
                     <button class="btn btn-primary" onclick="toggleForm()">+ Add Transaction</button>
+                    <button class="btn btn-secondary" onclick="toggleStatistics()" id="statsBtn">📊 Statistics</button>
                     <button class="btn btn-secondary" onclick="refreshFromSheet()">🔄 Refresh</button>
                 </div>
             </div>
@@ -531,7 +535,7 @@
             </div>
 
             <!-- Transaction List -->
-            <div class="transaction-list">
+            <div class="transaction-list" id="transactionListContainer">
                 <div class="list-header">
                     <div class="list-title">Transactions</div>
                     <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
@@ -540,6 +544,19 @@
                 </div>
                 <div id="transactionsList">
                     <div class="empty-state">Loading from Google Sheets...</div>
+                </div>
+            </div>
+
+            <!-- Statistics View (hidden by default) -->
+            <div class="transaction-list hidden" id="statisticsContainer">
+                <div class="list-header">
+                    <div class="list-title">Expense Statistics</div>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+                        <canvas id="expenseChart" width="800" height="800" style="max-width: 400px; max-height: 400px;"></canvas>
+                    </div>
+                    <div id="categoryBreakdown"></div>
                 </div>
             </div>
         </div>
@@ -551,6 +568,240 @@
         let showFuture = false;
         let transactionType = 'expense'; // Default to expense
         let editingTransactionId = null; // Track which transaction is being edited
+        let showingStatistics = false; // Track statistics view
+        let chartInstance = null; // Store chart instance
+
+        // Categorize transaction based on event name
+        function categorizeTransaction(event, amount) {
+            const eventLower = event.toLowerCase();
+            
+            // Income
+            if (amount > 0) {
+                return 'Income';
+            }
+            
+            // Living: Rent, utilities, internet, phone, transport
+            if (eventLower.includes('rent') || 
+                eventLower.includes('fibre') || 
+                eventLower.includes('sosh') || 
+                eventLower.includes('electricity') ||
+                eventLower.includes('electricité') ||
+                eventLower.includes('bouygues') ||
+                eventLower.includes('transport')) {
+                return 'Living';
+            }
+            
+            // Food: Groceries, canteen, restaurants
+            if (eventLower.includes('groceries') || 
+                eventLower.includes('grocer') ||
+                eventLower.includes('lidl') ||
+                eventLower.includes('supermarket') ||
+                eventLower.includes('canteen') ||
+                eventLower.includes('cantine')) {
+                return 'Food';
+            }
+            
+            // Services: Subscriptions, insurance, bank fees, débit différé
+            if (eventLower.includes('subscription') || 
+                eventLower.includes('insurance') || 
+                eventLower.includes('assurance') ||
+                eventLower.includes('débit') ||
+                eventLower.includes('debit') ||
+                eventLower.includes('cotisations') ||
+                eventLower.includes('apple') ||
+                eventLower.includes('rozmova') ||
+                eventLower.includes('amazon') ||
+                eventLower.includes('malakoff')) {
+                return 'Services';
+            }
+            
+            // Other: Everything else
+            return 'Other';
+        }
+
+        // Toggle statistics view
+        function toggleStatistics() {
+            showingStatistics = !showingStatistics;
+            const listContainer = document.getElementById('transactionListContainer');
+            const statsContainer = document.getElementById('statisticsContainer');
+            const statsBtn = document.getElementById('statsBtn');
+            
+            if (showingStatistics) {
+                listContainer.classList.add('hidden');
+                statsContainer.classList.remove('hidden');
+                statsBtn.textContent = '📋 Transactions';
+                renderStatistics();
+            } else {
+                listContainer.classList.remove('hidden');
+                statsContainer.classList.add('hidden');
+                statsBtn.textContent = '📊 Statistics';
+            }
+        }
+
+        // Render statistics with pie chart
+        function renderStatistics() {
+            // Get only completed transactions (exclude pending)
+            const completedTransactions = transactions.filter(t => t.status === '✅');
+            
+            // Group by category
+            const categoryTotals = {};
+            completedTransactions.forEach(t => {
+                const category = categorizeTransaction(t.event, t.amount);
+                if (!categoryTotals[category]) {
+                    categoryTotals[category] = 0;
+                }
+                // Only count expenses (negative amounts)
+                if (t.amount < 0) {
+                    categoryTotals[category] += Math.abs(t.amount);
+                }
+            });
+            
+            // Remove Income category from chart (we only show expenses)
+            delete categoryTotals['Income'];
+            
+            // Prepare data for chart
+            const categories = Object.keys(categoryTotals);
+            const amounts = Object.values(categoryTotals);
+            const colors = {
+                'Living': '#667eea',
+                'Food': '#27ae60',
+                'Services': '#e74c3c',
+                'Other': '#f39c12'
+            };
+            
+            // Create pie chart
+            const canvas = document.getElementById('expenseChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy previous chart if exists
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            // Simple pie chart implementation
+            drawPieChart(ctx, categories, amounts, colors);
+            
+            // Show category breakdown
+            const breakdown = document.getElementById('categoryBreakdown');
+            const total = amounts.reduce((sum, val) => sum + val, 0);
+            
+            breakdown.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #333;">Category Breakdown</h3>
+                ${categories.map((cat, i) => {
+                    const percentage = ((amounts[i] / total) * 100).toFixed(1);
+                    return `
+                        <div onclick="showCategoryTransactions('${cat}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='white'">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 20px; height: 20px; background: ${colors[cat]}; border-radius: 4px;"></div>
+                                <span style="font-weight: 600;">${cat}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: bold; color: #e74c3c;">€${amounts[i].toFixed(2)}</div>
+                                <div style="font-size: 12px; color: #999;">${percentage}%</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                <div style="display: flex; justify-content: space-between; padding: 15px 10px; font-weight: bold; font-size: 16px; color: #333;">
+                    <span>Total Expenses</span>
+                    <span style="color: #e74c3c;">€${total.toFixed(2)}</span>
+                </div>
+                <div id="categoryTransactions" style="margin-top: 20px;"></div>
+            `;
+        }
+
+        // Draw simple pie chart
+        function drawPieChart(ctx, labels, data, colors) {
+            const canvas = ctx.canvas;
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 40;
+            
+            // Emoji mapping
+            const emojis = {
+                'Living': '🏠',
+                'Food': '🍔',
+                'Services': '💳',
+                'Other': '✨'
+            };
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const total = data.reduce((sum, val) => sum + val, 0);
+            let currentAngle = -Math.PI / 2; // Start at top
+            
+            data.forEach((value, index) => {
+                const sliceAngle = (value / total) * 2 * Math.PI;
+                
+                // Draw slice
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = colors[labels[index]];
+                ctx.fill();
+                
+                // Draw emoji label
+                const labelAngle = currentAngle + sliceAngle / 2;
+                const labelX = centerX + (radius * 0.7) * Math.cos(labelAngle);
+                const labelY = centerY + (radius * 0.7) * Math.sin(labelAngle);
+                
+                ctx.font = '32px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(emojis[labels[index]] || '❓', labelX, labelY);
+                
+                currentAngle += sliceAngle;
+            });
+        }
+
+        // Show transactions for a specific category
+        function showCategoryTransactions(category) {
+            const container = document.getElementById('categoryTransactions');
+            
+            // Get completed transactions for this category
+            const categoryTransactions = transactions
+                .filter(t => t.status === '✅' && categorizeTransaction(t.event, t.amount) === category)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (categoryTransactions.length === 0) {
+                container.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #999;">
+                        No transactions in this category
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div style="border-top: 2px solid #667eea; padding-top: 15px;">
+                    <h4 style="margin-bottom: 15px; color: #333;">${category} Transactions</h4>
+                    ${categoryTransactions.map(t => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; color: #333; margin-bottom: 3px;">
+                                    ${t.event}
+                                </div>
+                                <div style="font-size: 12px; color: #999;">
+                                    ${formatDate(t.date)}
+                                </div>
+                                ${t.comment ? `<div style="font-size: 13px; color: #666; margin-top: 3px;">${t.comment}</div>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: bold; font-size: 16px; color: ${t.amount >= 0 ? '#27ae60' : '#e74c3c'};">
+                                    ${t.amount >= 0 ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button onclick="document.getElementById('categoryTransactions').innerHTML=''" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
         // Set transaction type
         function setTransactionType(type) {
@@ -649,12 +900,14 @@
                 transactions = dataRows.map((row, index) => {
                     console.log(`Row ${index}:`, row);
                     
-                    // Parse date (ISO format: "2026-01-27")
+                    // Parse date (ISO format: "2026-01-27" or "2026-01-27T00:00:00.000Z")
                     let date;
                     let dateWarning = '';
                     try {
                         if (row[0]) {
-                            date = new Date(row[0]);
+                            // Handle both string dates and ISO timestamps
+                            const dateStr = typeof row[0] === 'string' ? row[0] : row[0].toString();
+                            date = new Date(dateStr);
                             if (isNaN(date.getTime())) {
                                 console.warn(`Invalid date for row ${index}: ${row[0]} - using today instead`);
                                 dateWarning = ` ⚠️ Invalid date: ${row[0]}`;
@@ -669,11 +922,12 @@
                         date = new Date();
                     }
                     
-                    // Parse completed status (True/False → emoji)
+                    // Parse completed status (true/false boolean or "TRUE"/"FALSE" string → emoji)
                     const completed = row[3];
                     console.log(`Row ${index} status value:`, completed, `Type:`, typeof completed);
                     let status = '✅';
-                    if (completed === 'False' || completed === false || completed === 'false' || completed === 'FALSE' || completed === 'F') {
+                    // Handle both boolean false and string variations
+                    if (completed === false || completed === 'false' || completed === 'False' || completed === 'FALSE' || completed === 'F') {
                         status = '⏳';
                     }
                     console.log(`Row ${index} final status:`, status);
@@ -898,10 +1152,13 @@
             const sortedFuture = [...futureTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
             const nextSalaryIndex = sortedFuture.findIndex(t => t.amount > 0 && t.event.toLowerCase().includes('salary'));
             
-            // Pending until next salary (or all future if no salary)
-            const pendingUntilSalary = nextSalaryIndex >= 0
-                ? sortedFuture.slice(0, nextSalaryIndex).reduce((sum, t) => sum + t.amount, 0)
-                : futureTransactions.reduce((sum, t) => sum + t.amount, 0);
+            // Upcoming this month - all future transactions in the current month
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            const upcomingThisMonth = futureTransactions.filter(t => {
+                const tDate = new Date(t.date);
+                return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+            }).reduce((sum, t) => sum + t.amount, 0);
             
             // Find next "Débit différé" - search by name
             const nextDebitDiffere = sortedFuture.find(t => 
@@ -931,7 +1188,7 @@
                 total, 
                 available, 
                 pendingToday,
-                pendingUntilSalary,
+                upcomingThisMonth,
                 balanceAfterNextDebit,
                 balanceAfterJustDebit,
                 transactionsUntilDebit,
@@ -942,39 +1199,33 @@
 
         // Update balance display
         function updateBalance() {
-            const { total, available, pendingToday, pendingUntilSalary, balanceAfterNextDebit, balanceAfterJustDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
+            const { total, available, pendingToday, upcomingThisMonth, balanceAfterNextDebit, balanceAfterJustDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
             
-            // Update balance date label
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const yyyy = today.getFullYear();
-            document.getElementById('balanceDateLabel').textContent = `Available Balance on ${dd}/${mm}/${yyyy}`;
+            // My Money (main display) = the "Debt" value (balance after next debit)
+            const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
+            const myMoneyEl = document.getElementById('myMoneyBalance');
+            myMoneyEl.textContent = `€${myMoney.toFixed(2)}`;
             
-            // Available balance (main display)
-            const balanceEl = document.getElementById('currentBalance');
-            balanceEl.textContent = `€${available.toFixed(2)}`;
-            
-            if (available < 0) {
-                balanceEl.classList.add('negative');
+            // Color coding: red if negative, green if positive
+            if (myMoney < 0) {
+                myMoneyEl.classList.add('negative');
+                myMoneyEl.classList.remove('positive');
+                myMoneyEl.style.color = '#e74c3c';
             } else {
-                balanceEl.classList.remove('negative');
+                myMoneyEl.classList.remove('negative');
+                myMoneyEl.style.color = '#27ae60';
             }
             
-            // Update formula explanation - just show the result, colored
-            const formulaEl = document.getElementById('balanceFormula');
-            if (balanceAfterJustDebit !== null) {
-                const color = balanceAfterJustDebit < 0 ? '#e74c3c' : '#27ae60';
-                formulaEl.innerHTML = `Debt: <span style="color: ${color}; font-weight: 600;">€${balanceAfterJustDebit.toFixed(2)}</span>`;
-            } else {
-                formulaEl.textContent = 'No upcoming Débit différé';
-            }
+            // Available balance (secondary) - what's in the account now
+            const availableLabel = document.getElementById('availableBalanceLabel');
+            availableLabel.textContent = `Available in account: €${available.toFixed(2)}`;
+            availableLabel.style.color = '#999';
             
-            // Pending until next salary
+            // Upcoming this month
             const pendingEl = document.getElementById('pendingAmount');
-            pendingEl.textContent = `€${pendingUntilSalary.toFixed(2)}`;
+            pendingEl.textContent = `€${upcomingThisMonth.toFixed(2)}`;
             
-            // Balance after next débit différé
+            // Balance after next débit différé (all transactions until debit)
             const afterDebitEl = document.getElementById('afterDebitBalance');
             if (balanceAfterNextDebit !== null) {
                 afterDebitEl.textContent = `€${balanceAfterNextDebit.toFixed(2)}`;
@@ -1037,7 +1288,7 @@
                 <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}" onclick="editTransaction(${t.id})">
                     <div class="transaction-info">
                         <div class="transaction-event">
-                            ${t.status} ${isFuture ? '🔮 ' : ''}${t.event.length > 12 ? t.event.substring(0, 12) + '...' : t.event}
+                            ${t.status} ${t.event.length > 12 ? t.event.substring(0, 12) + '...' : t.event}
                         </div>
                         <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
                         ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
@@ -1046,7 +1297,7 @@
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
                             ${t.amount >= 0 ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}
                         </div>
-                        <div class="transaction-balance">Balance: €${t.balance.toFixed(2)}</div>
+                        <div class="transaction-balance">€${t.balance.toFixed(2)}</div>
                     </div>
                 </div>
             `}).join('');
