@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cashflow manager</title>
+    <title>Cashflow Manager</title>
     
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="icons/16.png">
@@ -156,7 +156,7 @@
             text-align: center;
             padding: 12px;
             margin-bottom: 20px;
-            border-radius: 8px;
+            border-radius: 15px;
             font-size: 12px;
             font-weight: 500;
             min-height: 44px;
@@ -574,6 +574,9 @@
             <div class="transaction-list hidden" id="statisticsContainer">
                 <div class="list-header">
                     <div class="list-title">Expense statistics</div>
+                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleStatsPeriod()" id="statsPeriodBtn">
+                        This month
+                    </button>
                 </div>
                 <div style="padding: 20px;">
                     <div style="display: flex; justify-content: center; margin-bottom: 30px; overflow: hidden;">
@@ -593,6 +596,15 @@
         let editingTransactionId = null; // Track which transaction is being edited
         let showingStatistics = false; // Track statistics view
         let chartInstance = null; // Store chart instance
+        let statsShowAllTime = false; // Track if showing all time or this month
+
+        // Toggle statistics period
+        function toggleStatsPeriod() {
+            statsShowAllTime = !statsShowAllTime;
+            const btn = document.getElementById('statsPeriodBtn');
+            btn.textContent = statsShowAllTime ? 'All time' : 'This month';
+            renderStatistics();
+        }
 
         // Categorize transaction based on event name
         function categorizeTransaction(event, amount) {
@@ -675,7 +687,19 @@
         // Render statistics with pie chart
         function renderStatistics() {
             // Get only completed transactions (exclude pending)
-            const completedTransactions = transactions.filter(t => t.status === '✅');
+            let completedTransactions = transactions.filter(t => t.status === '✅');
+            
+            // Filter by this month if not showing all time
+            if (!statsShowAllTime) {
+                const today = new Date();
+                const currentMonth = today.getMonth();
+                const currentYear = today.getFullYear();
+                
+                completedTransactions = completedTransactions.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+                });
+            }
             
             // Group by category
             const categoryTotals = {};
@@ -693,14 +717,18 @@
             // Remove Income category from chart (we only show expenses)
             delete categoryTotals['Income'];
             
-            // Prepare data for chart
-            const categories = Object.keys(categoryTotals);
-            const amounts = Object.values(categoryTotals);
+            // Prepare data for chart - sort by amount descending
+            const sortedCategories = Object.entries(categoryTotals)
+                .sort((a, b) => b[1] - a[1]); // Sort by amount, largest first
+            
+            const categories = sortedCategories.map(([cat]) => cat);
+            const amounts = sortedCategories.map(([, amt]) => amt);
+            
             const colors = {
                 'Living': '#667eea',
                 'Food': '#27ae60',
                 'Services': '#e74c3c',
-                'Débit différé': '#9b59b6',
+                'Débit différé': '#2c3e50',
                 'Pets': '#e91e63',
                 'Other': '#f39c12'
             };
@@ -721,26 +749,43 @@
             const breakdown = document.getElementById('categoryBreakdown');
             const total = amounts.reduce((sum, val) => sum + val, 0);
             
+            // Emoji mapping for breakdown
+            const categoryEmojis = {
+                'Living': '🏠',
+                'Food': '🥕',
+                'Services': '💳',
+                'Débit différé': '💀',
+                'Pets': '🐹',
+                'Other': '📦'
+            };
+            
             breakdown.innerHTML = `
                 <h3 style="margin-bottom: 15px; color: #333;">Category breakdown</h3>
                 ${categories.map((cat, i) => {
                     const percentage = ((amounts[i] / total) * 100).toFixed(1);
                     return `
-                        <div onclick="showCategoryTransactions('${cat}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='white'">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <div style="width: 20px; height: 20px; background: ${colors[cat]}; border-radius: 4px;"></div>
-                                <span style="font-weight: 600;">${cat}</span>
+                        <div onclick="showCategoryTransactions('${cat}')" style="padding: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='white'">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 20px;">${categoryEmojis[cat] || '❓'}</span>
+                                    <span style="font-weight: 600; color: #333; font-size: 15px;">${cat}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; font-size: 18px; color: #333;">${percentage}%</div>
+                                    <div style="font-size: 13px; color: #999; margin-top: 2px;">€${amounts[i].toFixed(2)}</div>
+                                </div>
                             </div>
-                            <div style="text-align: right;">
-                                <div style="font-weight: bold; color: #e74c3c;">€${amounts[i].toFixed(2)}</div>
-                                <div style="font-size: 12px; color: #999;">${percentage}%</div>
+                            <div style="width: 100%; height: 6px; background: #f0f0f0; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${percentage}%; height: 100%; background: ${colors[cat]}; border-radius: 3px; transition: width 0.3s ease;"></div>
                             </div>
                         </div>
                     `;
                 }).join('')}
-                <div style="display: flex; justify-content: space-between; padding: 15px 10px; font-weight: bold; font-size: 16px; color: #333;">
-                    <span>Total expenses</span>
-                    <span style="color: #e74c3c;">€${total.toFixed(2)}</span>
+                <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; font-size: 16px; color: #333;">Total expenses</span>
+                        <span style="font-weight: 700; font-size: 20px; color: #e74c3c;">€${total.toFixed(2)}</span>
+                    </div>
                 </div>
                 <div id="categoryTransactions" style="margin-top: 20px;"></div>
             `;
@@ -760,7 +805,7 @@
                 'Services': '💳',
                 'Débit différé': '💀',
                 'Pets': '🐹',
-                'Other': '✨'
+                'Other': '📦'
             };
             
             // Clear canvas
@@ -877,6 +922,21 @@
             
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
+            
+            // Add listener to date input to auto-set status
+            document.getElementById('dateInput').addEventListener('change', function(e) {
+                const selectedDate = new Date(e.target.value);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                selectedDate.setHours(0, 0, 0, 0);
+                
+                // If future date, set status to Expected
+                if (selectedDate > todayDate) {
+                    document.getElementById('statusInput').value = '⏳';
+                } else {
+                    document.getElementById('statusInput').value = '✅';
+                }
+            });
         }
 
         // Connect to Google Sheet
@@ -1315,7 +1375,7 @@
                 'Débit différé': '💀',
                 'Pets': '🐹',
                 'Income': '💰',
-                'Other': '✨'
+                'Other': '📦'
             };
             
             // Calculate running balance (only up to each transaction's date)
@@ -1344,7 +1404,7 @@
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
-                            ${t.amount >= 0 ? '+' : ''}€${Math.abs(t.amount).toFixed(2)}
+                            ${t.amount >= 0 ? '' : ''}€${Math.abs(t.amount).toFixed(2)}
                         </div>
                         <div class="transaction-balance">€${t.balance.toFixed(2)}</div>
                     </div>
