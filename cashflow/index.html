@@ -607,7 +607,7 @@
         }
 
         // Categorize transaction based on event name
-        function categorizeTransaction(event, amount) {
+        function categorizeTransaction(event, amount, comment) {
             const eventLower = event.toLowerCase();
             
             // Income
@@ -615,9 +615,8 @@
                 return 'Income';
             }
             
-            // Débit différé - its own category
-            if (eventLower.includes('débit différé') || 
-                eventLower.includes('debit differe')) {
+            // Débit différé - check comment for "DD"
+            if (comment && comment.toUpperCase().includes('DD')) {
                 return 'Débit différé';
             }
             
@@ -704,7 +703,7 @@
             // Group by category
             const categoryTotals = {};
             completedTransactions.forEach(t => {
-                const category = categorizeTransaction(t.event, t.amount);
+                const category = categorizeTransaction(t.event, t.amount, t.comment);
                 if (!categoryTotals[category]) {
                     categoryTotals[category] = 0;
                 }
@@ -760,7 +759,6 @@
             };
             
             breakdown.innerHTML = `
-                <h3 style="margin-bottom: 15px; color: #333;">Category breakdown</h3>
                 ${categories.map((cat, i) => {
                     const percentage = ((amounts[i] / total) * 100).toFixed(1);
                     return `
@@ -829,8 +827,13 @@
                 const labelX = centerX + (radius * 0.65) * Math.cos(labelAngle);
                 const labelY = centerY + (radius * 0.65) * Math.sin(labelAngle);
                 
-                // Larger emoji size based on canvas size
-                const emojiSize = Math.floor(canvas.width / 12); // Responsive emoji size
+                // Responsive emoji size, scaled for small slices
+                const totalValue = data.reduce((sum, val) => sum + val, 0);
+                const slicePercentage = (value / totalValue) * 100;
+                
+                // Adjust emoji size: smaller if slice < 5%
+                let baseSize = Math.floor(canvas.width / 12);
+                const emojiSize = slicePercentage < 5 ? Math.floor(baseSize * 0.6) : baseSize;
                 ctx.font = `${emojiSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -844,9 +847,29 @@
         function showCategoryTransactions(category) {
             const container = document.getElementById('categoryTransactions');
             
-            // Get completed transactions for this category
+            // Get transactions for this category
             const categoryTransactions = transactions
-                .filter(t => t.status === '✅' && categorizeTransaction(t.event, t.amount) === category)
+                .filter(t => {
+                    const matchesCategory = categorizeTransaction(t.event, t.amount, t.comment) === category;
+                    if (!matchesCategory) return false;
+
+                    const tDate = new Date(t.date);
+
+                    // Respect statistics period filter
+                    if (!statsShowAllTime) {
+                        const now = new Date();
+                        if (tDate.getMonth() !== now.getMonth() || tDate.getFullYear() !== now.getFullYear()) {
+                            return false;
+                        }
+                    }
+
+            // Débit différé shows all statuses, others only completed
+            if (category === 'Débit différé') {
+                return true;
+            }
+
+                    return t.status === '✅';
+                })
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             
             if (categoryTransactions.length === 0) {
@@ -1260,28 +1283,39 @@
                 return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            // Find next "Débit différé" - search by name
+            // Find next "Débit différé" - check comment for "DD"
             const nextDebitDiffere = sortedFuture.find(t => 
-                t.event.toLowerCase().includes('débit différé') || 
-                t.event.toLowerCase().includes('debit differe')
+                t.comment && t.comment.toUpperCase().includes('DD')
             );
             
-            // Calculate all transactions between today and next debit differe
+            // Calculate sum of Débit différé for next month only
             let transactionsUntilDebit = 0;
             let balanceAfterNextDebit = null;
             let balanceAfterJustDebit = null;
             let nextDebitAmount = 0;
             
             if (nextDebitDiffere) {
-                // For "After Next Débit" - include ALL transactions up to debit date
-                const debitDate = new Date(nextDebitDiffere.date);
-                const untilDebit = sortedFuture.filter(t => new Date(t.date) <= debitDate);
+                const firstDebitDate = new Date(nextDebitDiffere.date);
+                const nextMonth = firstDebitDate.getMonth();
+                const nextYear = firstDebitDate.getFullYear();
+                
+                // Get ALL Débit différé transactions (comment = "DD") from the same month as the first one
+                const nextMonthDebitDiffere = sortedFuture.filter(t => {
+                    const tDate = new Date(t.date);
+                    return (t.comment && t.comment.toUpperCase().includes('DD')) &&
+                           tDate.getMonth() === nextMonth &&
+                           tDate.getFullYear() === nextYear;
+                });
+                
+                // Sum all débit différé amounts from next month
+                nextDebitAmount = nextMonthDebitDiffere.reduce((sum, t) => sum + t.amount, 0);
+                balanceAfterJustDebit = available + nextDebitAmount;
+                
+                // For "After Next Débit" - include ALL transactions up to the last debit in that month
+                const lastDebitDate = new Date(nextMonthDebitDiffere[nextMonthDebitDiffere.length - 1].date);
+                const untilDebit = sortedFuture.filter(t => new Date(t.date) <= lastDebitDate);
                 transactionsUntilDebit = untilDebit.reduce((sum, t) => sum + t.amount, 0);
                 balanceAfterNextDebit = available + transactionsUntilDebit;
-                
-                // For the formula display - just the debit itself
-                nextDebitAmount = nextDebitDiffere.amount;
-                balanceAfterJustDebit = available + nextDebitAmount;
             }
             
             return { 
@@ -1383,7 +1417,7 @@
                 const upToDate = transactions.filter(tx => {
                     return new Date(tx.date) <= new Date(t.date);
                 }).reduce((sum, tx) => sum + tx.amount, 0);
-                const category = categorizeTransaction(t.event, t.amount);
+                const category = categorizeTransaction(t.event, t.amount, t.comment);
                 return { ...t, balance: upToDate, category: category };
             }).reverse();
 
