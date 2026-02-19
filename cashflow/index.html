@@ -481,15 +481,15 @@
             <div class="header">
                 <div class="balance-display">
                     <div class="balance-label" id="balanceDateLabel">My money</div>
-                    <div class="balance-amount" id="myMoneyBalance">€0.00</div>
+                    <div class="balance-amount" id="myMoneyBalance" onclick="showMyMoneyExplanation()" style="cursor: pointer;">€0.00</div>
                     
                     <div class="balance-row">
-                        <div class="balance-item">
+                        <div class="balance-item" onclick="showAvailableExplanation()" style="cursor: pointer;">
                             <div class="balance-item-label">Available in account</div>
                             <div class="balance-item-value" id="availableAmount">€0.00</div>
                         </div>
-                        <div class="balance-item">
-                            <div class="balance-item-label">After next débit</div>
+                        <div class="balance-item" onclick="showNextMonthExplanation()" style="cursor: pointer;">
+                            <div class="balance-item-label">Available next month</div>
                             <div class="balance-item-value" id="afterDebitBalance">€0.00</div>
                         </div>
                     </div>
@@ -562,7 +562,7 @@
                 <div class="list-header">
                     <div class="list-title">Transactions</div>
                     <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
-                        Show future (<span id="futureCount">0</span>)
+                        Show until next month (<span id="futureCount">0</span>)
                     </button>
                 </div>
                 <div id="transactionsList">
@@ -596,13 +596,28 @@
         let editingTransactionId = null; // Track which transaction is being edited
         let showingStatistics = false; // Track statistics view
         let chartInstance = null; // Store chart instance
-        let statsShowAllTime = false; // Track if showing all time or this month
+        let statsPeriod = 'thisMonth'; // Track period: 'thisMonth', 'nextMonth', 'allTime'
 
         // Toggle statistics period
         function toggleStatsPeriod() {
-            statsShowAllTime = !statsShowAllTime;
+            // Cycle through: This month → Next month → All time → This month
+            if (statsPeriod === 'thisMonth') {
+                statsPeriod = 'nextMonth';
+            } else if (statsPeriod === 'nextMonth') {
+                statsPeriod = 'allTime';
+            } else {
+                statsPeriod = 'thisMonth';
+            }
+            
             const btn = document.getElementById('statsPeriodBtn');
-            btn.textContent = statsShowAllTime ? 'All time' : 'This month';
+            if (statsPeriod === 'thisMonth') {
+                btn.textContent = 'This month';
+            } else if (statsPeriod === 'nextMonth') {
+                btn.textContent = 'Next month';
+            } else {
+                btn.textContent = 'All time';
+            }
+            
             renderStatistics();
         }
 
@@ -685,19 +700,32 @@
 
         // Render statistics with pie chart
         function renderStatistics() {
-            // Get only completed transactions (exclude pending)
-            let completedTransactions = transactions.filter(t => t.status === '✅');
+            let completedTransactions;
             
-            // Filter by this month if not showing all time
-            if (!statsShowAllTime) {
-                const today = new Date();
-                const currentMonth = today.getMonth();
-                const currentYear = today.getFullYear();
-                
-                completedTransactions = completedTransactions.filter(t => {
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            
+            if (statsPeriod === 'thisMonth') {
+                // This month: only completed transactions
+                completedTransactions = transactions.filter(t => {
+                    if (t.status !== '✅') return false;
                     const tDate = new Date(t.date);
                     return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
                 });
+            } else if (statsPeriod === 'nextMonth') {
+                // Next month: BOTH completed and expected transactions
+                const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+                const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+                
+                completedTransactions = transactions.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
+                    // No status filter - includes both ✅ and ⏳
+                });
+            } else {
+                // All time: only completed transactions
+                completedTransactions = transactions.filter(t => t.status === '✅');
             }
             
             // Group by category
@@ -759,6 +787,7 @@
             };
             
             breakdown.innerHTML = `
+                <h3 style="margin-bottom: 15px; color: #333;">Category breakdown</h3>
                 ${categories.map((cat, i) => {
                     const percentage = ((amounts[i] / total) * 100).toFixed(1);
                     return `
@@ -827,13 +856,8 @@
                 const labelX = centerX + (radius * 0.65) * Math.cos(labelAngle);
                 const labelY = centerY + (radius * 0.65) * Math.sin(labelAngle);
                 
-                // Responsive emoji size, scaled for small slices
-                const totalValue = data.reduce((sum, val) => sum + val, 0);
-                const slicePercentage = (value / totalValue) * 100;
-                
-                // Adjust emoji size: smaller if slice < 5%
-                let baseSize = Math.floor(canvas.width / 12);
-                const emojiSize = slicePercentage < 5 ? Math.floor(baseSize * 0.6) : baseSize;
+                // Larger emoji size based on canvas size
+                const emojiSize = Math.floor(canvas.width / 12); // Responsive emoji size
                 ctx.font = `${emojiSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -847,28 +871,35 @@
         function showCategoryTransactions(category) {
             const container = document.getElementById('categoryTransactions');
             
-            // Get transactions for this category
+            const now = new Date();
+            
+            // Get transactions for this category with period filtering
             const categoryTransactions = transactions
                 .filter(t => {
-                    const matchesCategory = categorizeTransaction(t.event, t.amount, t.comment) === category;
-                    if (!matchesCategory) return false;
-
+                    // Check category match
+                    if (categorizeTransaction(t.event, t.amount, t.comment) !== category) return false;
+                    
+                    // Apply period filter
                     const tDate = new Date(t.date);
-
-                    // Respect statistics period filter
-                    if (!statsShowAllTime) {
-                        const now = new Date();
+                    if (statsPeriod === 'thisMonth') {
                         if (tDate.getMonth() !== now.getMonth() || tDate.getFullYear() !== now.getFullYear()) {
                             return false;
                         }
+                        // This month: only completed
+                        if (t.status !== '✅') return false;
+                    } else if (statsPeriod === 'nextMonth') {
+                        const nextMonth = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
+                        const nextYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+                        if (tDate.getMonth() !== nextMonth || tDate.getFullYear() !== nextYear) {
+                            return false;
+                        }
+                        // Next month: both completed and expected (no status filter)
+                    } else {
+                        // All time: only completed
+                        if (t.status !== '✅') return false;
                     }
-
-            // Débit différé shows all statuses, others only completed
-            if (category === 'Débit différé') {
-                return true;
-            }
-
-                    return t.status === '✅';
+                    
+                    return true;
                 })
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
             
@@ -1288,11 +1319,12 @@
                 t.comment && t.comment.toUpperCase().includes('DD')
             );
             
-            // Calculate sum of Débit différé for next month only
+            // Calculate "My money" and "Available next month"
             let transactionsUntilDebit = 0;
             let balanceAfterNextDebit = null;
             let balanceAfterJustDebit = null;
             let nextDebitAmount = 0;
+            let availableNextMonth = null;
             
             if (nextDebitDiffere) {
                 const firstDebitDate = new Date(nextDebitDiffere.date);
@@ -1311,11 +1343,39 @@
                 nextDebitAmount = nextMonthDebitDiffere.reduce((sum, t) => sum + t.amount, 0);
                 balanceAfterJustDebit = available + nextDebitAmount;
                 
-                // For "After Next Débit" - include ALL transactions up to the last debit in that month
-                const lastDebitDate = new Date(nextMonthDebitDiffere[nextMonthDebitDiffere.length - 1].date);
-                const untilDebit = sortedFuture.filter(t => new Date(t.date) <= lastDebitDate);
-                transactionsUntilDebit = untilDebit.reduce((sum, t) => sum + t.amount, 0);
-                balanceAfterNextDebit = available + transactionsUntilDebit;
+                // Calculate "Available next month" = Available today + This month's salary - Next month's (DD + Living + Services)
+                // Find this month's salary
+                const thisMonthSalary = sortedFuture.filter(t => {
+                    const tDate = new Date(t.date);
+                    return t.amount > 0 && 
+                           t.event.toLowerCase().includes('salary') &&
+                           tDate.getMonth() === currentMonth &&
+                           tDate.getFullYear() === currentYear;
+                }).reduce((sum, t) => sum + t.amount, 0);
+                
+                // Get next month's expenses by category
+                const nextMonthTransactions = sortedFuture.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
+                });
+                
+                let nextMonthDD = 0;
+                let nextMonthLiving = 0;
+                let nextMonthServices = 0;
+                
+                nextMonthTransactions.forEach(t => {
+                    const category = categorizeTransaction(t.event, t.amount, t.comment);
+                    if (category === 'Débit différé') {
+                        nextMonthDD += t.amount;
+                    } else if (category === 'Living') {
+                        nextMonthLiving += t.amount;
+                    } else if (category === 'Services') {
+                        nextMonthServices += t.amount;
+                    }
+                });
+                
+                availableNextMonth = available + thisMonthSalary + nextMonthDD + nextMonthLiving + nextMonthServices;
+                balanceAfterNextDebit = availableNextMonth;
             }
             
             return { 
@@ -1388,7 +1448,14 @@
             // Filter transactions based on showFuture toggle
             let displayTransactions;
             if (showFuture) {
-                displayTransactions = transactions; // Show all
+                // Show everything up to the end of next month
+                const endNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+                endNextMonth.setHours(23, 59, 59, 999);
+
+                displayTransactions = transactions.filter(t => {
+                    const transactionDate = new Date(t.date);
+                    return transactionDate <= endNextMonth;
+                });
             } else {
                 // Show only up to today
                 displayTransactions = transactions.filter(t => {
@@ -1454,12 +1521,128 @@
             
             // Update button text while preserving the count span
             if (showFuture) {
-                btn.innerHTML = `Hide future (<span id="futureCount">${futureCount}</span>)`;
+                btn.innerHTML = `Hide until next month (<span id="futureCount">${futureCount}</span>)`;
             } else {
-                btn.innerHTML = `Show future (<span id="futureCount">${futureCount}</span>)`;
+                btn.innerHTML = `Show until next month (<span id="futureCount">${futureCount}</span>)`;
             }
             
             renderTransactions();
+        }
+
+        // Show explanation for My Money
+        function showMyMoneyExplanation() {
+            const { available, balanceAfterJustDebit, nextDebitAmount } = calculateBalance();
+            const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
+            
+            let explanation = '📊 My Money Calculation:\n\n';
+            
+            if (balanceAfterJustDebit !== null) {
+                explanation += `Available in account: €${available.toFixed(2)}\n`;
+                explanation += `+ Next month's Débit différé: €${nextDebitAmount.toFixed(2)}\n`;
+                explanation += `= €${myMoney.toFixed(2)}\n\n`;
+                explanation += 'This shows your real financial position after the next Débit différé charges hit.';
+            } else {
+                explanation += `No upcoming Débit différé found.\n`;
+                explanation += `My Money = Available in account\n`;
+                explanation += `= €${available.toFixed(2)}`;
+            }
+            
+            alert(explanation);
+        }
+
+        // Show explanation for Available in Account
+        function showAvailableExplanation() {
+            const today = new Date();
+            const todayStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+            
+            const completedToday = transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                transactionDate.setHours(0, 0, 0, 0);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                return transactionDate <= todayDate && t.status === '✅';
+            });
+            
+            const total = completedToday.reduce((sum, t) => sum + t.amount, 0);
+            
+            let explanation = '💰 Available in Account:\n\n';
+            explanation += `Sum of all completed (✅) transactions up to ${todayStr}\n\n`;
+            explanation += `Total: €${total.toFixed(2)}\n\n`;
+            explanation += 'This is what\'s actually in your bank account right now (excludes expected ⏳ transactions).';
+            
+            alert(explanation);
+        }
+
+        // Show explanation for Available Next Month
+        function showNextMonthExplanation() {
+            const { available } = calculateBalance();
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            
+            const sortedFuture = transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                transactionDate.setHours(0, 0, 0, 0);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                return transactionDate > todayDate;
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            // Find this month's salary
+            const thisMonthSalary = sortedFuture.filter(t => {
+                const tDate = new Date(t.date);
+                return t.amount > 0 && 
+                       t.event.toLowerCase().includes('salary') &&
+                       tDate.getMonth() === currentMonth &&
+                       tDate.getFullYear() === currentYear;
+            }).reduce((sum, t) => sum + t.amount, 0);
+            
+            // Find next month
+            const nextDebitDiffere = sortedFuture.find(t => 
+                t.comment && t.comment.toUpperCase().includes('DD')
+            );
+            
+            let explanation = '📅 Available next month:\n\n';
+            explanation += `Available today: €${available.toFixed(2)}\n`;
+            explanation += `+ This month's salary: €${thisMonthSalary.toFixed(2)}\n`;
+            
+            if (nextDebitDiffere) {
+                const firstDebitDate = new Date(nextDebitDiffere.date);
+                const nextMonth = firstDebitDate.getMonth();
+                const nextYear = firstDebitDate.getFullYear();
+                
+                const nextMonthTransactions = sortedFuture.filter(t => {
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
+                });
+                
+                let nextMonthDD = 0;
+                let nextMonthLiving = 0;
+                let nextMonthServices = 0;
+                
+                nextMonthTransactions.forEach(t => {
+                    const category = categorizeTransaction(t.event, t.amount, t.comment);
+                    if (category === 'Débit différé') {
+                        nextMonthDD += t.amount;
+                    } else if (category === 'Living') {
+                        nextMonthLiving += t.amount;
+                    } else if (category === 'Services') {
+                        nextMonthServices += t.amount;
+                    }
+                });
+                
+                explanation += `- Next month's Débit différé: €${Math.abs(nextMonthDD).toFixed(2)}\n`;
+                explanation += `- Next month's Living: €${Math.abs(nextMonthLiving).toFixed(2)}\n`;
+                explanation += `- Next month's Services: €${Math.abs(nextMonthServices).toFixed(2)}\n`;
+                
+                const total = available + thisMonthSalary + nextMonthDD + nextMonthLiving + nextMonthServices;
+                explanation += `\n= €${total.toFixed(2)}\n\n`;
+                explanation += 'This is what you\'ll have for discretionary spending (Food, Pets, Other) next month.';
+            } else {
+                explanation += '\nNo Débit différé found for calculation.';
+            }
+            
+            alert(explanation);
         }
 
         // Format date for display
