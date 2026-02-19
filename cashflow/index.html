@@ -1534,7 +1534,7 @@
             const { available, balanceAfterJustDebit, nextDebitAmount } = calculateBalance();
             const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
             
-            let explanation = '📊 My Money Calculation:\n\n';
+            let explanation = '📊 My money calculation:\n\n';
             
             if (balanceAfterJustDebit !== null) {
                 explanation += `Available in account: €${available.toFixed(2)}\n`;
@@ -1565,7 +1565,7 @@
             
             const total = completedToday.reduce((sum, t) => sum + t.amount, 0);
             
-            let explanation = '💰 Available in Account:\n\n';
+            let explanation = '💰 Available in account:\n\n';
             explanation += `Sum of all completed (✅) transactions up to ${todayStr}\n\n`;
             explanation += `Total: €${total.toFixed(2)}\n\n`;
             explanation += 'This is what\'s actually in your bank account right now (excludes expected ⏳ transactions).';
