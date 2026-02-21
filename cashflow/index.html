@@ -546,6 +546,19 @@
                     </div>
                     
                     <div class="form-group">
+                        <label>Category</label>
+                        <select id="categoryInput">
+                            <option value="auto">Auto-detect</option>
+                            <option value="Living">🏠 Living</option>
+                            <option value="Food">🥕 Food</option>
+                            <option value="Services">💳 Services</option>
+                            <option value="Débit différé">💀 Débit différé</option>
+                            <option value="Pets">🐹 Pets</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                         <label>Comment</label>
                         <textarea id="commentInput" placeholder="Optional notes..."></textarea>
                     </div>
@@ -553,6 +566,7 @@
                     <div class="controls">
                         <button type="submit" class="btn btn-primary" id="saveBtn">Save to Google Sheet</button>
                         <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
+                        <button type="button" class="btn btn-danger hidden" id="deleteBtn" onclick="deleteTransaction()">Delete</button>
                     </div>
                 </form>
             </div>
@@ -597,6 +611,18 @@
         let showingStatistics = false; // Track statistics view
         let chartInstance = null; // Store chart instance
         let statsPeriod = 'thisMonth'; // Track period: 'thisMonth', 'nextMonth', 'allTime'
+        let categoryMemory = JSON.parse(localStorage.getItem('categoryMemory') || '{}'); // Store category choices
+
+        // Save category choice for an event name
+        function rememberCategory(eventName, category) {
+            categoryMemory[eventName.toLowerCase()] = category;
+            localStorage.setItem('categoryMemory', JSON.stringify(categoryMemory));
+        }
+
+        // Get remembered category for an event name
+        function getRememberedCategory(eventName) {
+            return categoryMemory[eventName.toLowerCase()] || null;
+        }
 
         // Toggle statistics period
         function toggleStatsPeriod() {
@@ -622,7 +648,18 @@
         }
 
         // Categorize transaction based on event name
-        function categorizeTransaction(event, amount, comment) {
+        function categorizeTransaction(event, amount, comment, savedCategory) {
+            // If there's a manually saved category, use it
+            if (savedCategory && savedCategory !== 'auto') {
+                return savedCategory;
+            }
+            
+            // Check if we have a remembered category for this event name
+            const remembered = getRememberedCategory(event);
+            if (remembered) {
+                return remembered;
+            }
+            
             const eventLower = event.toLowerCase();
             
             // Income
@@ -731,7 +768,7 @@
             // Group by category
             const categoryTotals = {};
             completedTransactions.forEach(t => {
-                const category = categorizeTransaction(t.event, t.amount, t.comment);
+                const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
                 if (!categoryTotals[category]) {
                     categoryTotals[category] = 0;
                 }
@@ -877,7 +914,7 @@
             const categoryTransactions = transactions
                 .filter(t => {
                     // Check category match
-                    if (categorizeTransaction(t.event, t.amount, t.comment) !== category) return false;
+                    if (categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory) !== category) return false;
                     
                     // Apply period filter
                     const tDate = new Date(t.date);
@@ -1183,6 +1220,8 @@
                 editingTransactionId = null;
                 document.querySelector('.form-title').textContent = 'New transaction';
                 document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
+                document.getElementById('deleteBtn').classList.add('hidden');
+                document.getElementById('categoryInput').value = 'auto';
             }
         }
 
@@ -1196,7 +1235,10 @@
             document.getElementById('eventInput').value = transaction.event;
             document.getElementById('amountInput').value = Math.abs(transaction.amount);
             document.getElementById('statusInput').value = transaction.status;
-            document.getElementById('commentInput').value = transaction.comment;
+            document.getElementById('commentInput').value = transaction.comment || '';
+            
+            // Set category
+            document.getElementById('categoryInput').value = transaction.savedCategory || 'auto';
             
             // Set transaction type based on amount
             if (transaction.amount < 0) {
@@ -1209,9 +1251,31 @@
             editingTransactionId = transactionId;
             document.querySelector('.form-title').textContent = 'Edit transaction';
             document.getElementById('saveBtn').textContent = 'Update transaction';
+            document.getElementById('deleteBtn').classList.remove('hidden');
             
             // Show form
             document.getElementById('transactionForm').classList.remove('hidden');
+        }
+
+        // Delete transaction
+        async function deleteTransaction() {
+            if (!confirm('Delete this transaction?')) {
+                return;
+            }
+            
+            if (editingTransactionId !== null) {
+                transactions = transactions.filter(t => t.id !== editingTransactionId);
+                editingTransactionId = null;
+                
+                renderTransactions();
+                updateBalance();
+                
+                // Save to Google Sheet
+                await saveToSheet();
+                
+                // Hide form
+                toggleForm();
+            }
         }
 
         // Add or update transaction
@@ -1231,6 +1295,12 @@
             
             const status = document.getElementById('statusInput').value;
             const comment = document.getElementById('commentInput').value;
+            const selectedCategory = document.getElementById('categoryInput').value;
+
+            // Save category choice if not auto-detect
+            if (selectedCategory !== 'auto') {
+                rememberCategory(eventName, selectedCategory);
+            }
 
             if (editingTransactionId !== null) {
                 // Update existing transaction
@@ -1242,7 +1312,8 @@
                         event: eventName,
                         amount: amount,
                         status: status,
-                        comment: comment
+                        comment: comment,
+                        savedCategory: selectedCategory !== 'auto' ? selectedCategory : undefined
                     };
                 }
                 editingTransactionId = null;
@@ -1254,7 +1325,8 @@
                     event: eventName,
                     amount: amount,
                     status: status,
-                    comment: comment
+                    comment: comment,
+                    savedCategory: selectedCategory !== 'auto' ? selectedCategory : undefined
                 };
                 transactions.push(transaction);
             }
@@ -1272,6 +1344,7 @@
             setTransactionType('expense'); // Reset to expense default
             document.querySelector('.form-title').textContent = 'New transaction';
             document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
+            document.getElementById('categoryInput').value = 'auto';
             toggleForm();
         }
 
@@ -1364,7 +1437,7 @@
                 let nextMonthServices = 0;
                 
                 nextMonthTransactions.forEach(t => {
-                    const category = categorizeTransaction(t.event, t.amount, t.comment);
+                    const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
                     if (category === 'Débit différé') {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
@@ -1484,7 +1557,7 @@
                 const upToDate = transactions.filter(tx => {
                     return new Date(tx.date) <= new Date(t.date);
                 }).reduce((sum, tx) => sum + tx.amount, 0);
-                const category = categorizeTransaction(t.event, t.amount, t.comment);
+                const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
                 return { ...t, balance: upToDate, category: category };
             }).reverse();
 
@@ -1621,7 +1694,7 @@
                 let nextMonthServices = 0;
                 
                 nextMonthTransactions.forEach(t => {
-                    const category = categorizeTransaction(t.event, t.amount, t.comment);
+                    const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
                     if (category === 'Débit différé') {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
