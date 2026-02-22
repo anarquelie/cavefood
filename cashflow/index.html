@@ -519,10 +519,10 @@
                     <div class="form-group">
                         <label>Type</label>
                         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <button type="button" class="btn btn-secondary" id="expenseBtn" onclick="setTransactionType('expense')" style="flex: 1; background: #e74c3c; color: white;">
+                            <button type="button" class="btn btn-secondary" id="expenseBtn" onclick="setTransactionType('expense')" style="flex: 1; border: 2px solid #e74c3c; background: white; color: #e74c3c; font-weight: 600;">
                                 − Expense
                             </button>
-                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1; background: #27ae60; color: white;">
+                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1; border: 2px solid #27ae60; background: white; color: #27ae60; font-weight: 600;">
                                 + Income
                             </button>
                         </div>
@@ -566,7 +566,7 @@
                     <div class="controls">
                         <button type="submit" class="btn btn-primary" id="saveBtn">Save to Google Sheet</button>
                         <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
-                        <button type="button" class="btn btn-danger hidden" id="deleteBtn" onclick="deleteTransaction()">Delete</button>
+                        <button type="button" class="btn btn-danger hidden" id="deleteBtn" onclick="deleteTransaction()">🗑️ Delete</button>
                     </div>
                 </form>
             </div>
@@ -987,16 +987,24 @@
             const hint = document.getElementById('amountHint');
             
             if (type === 'expense') {
-                expenseBtn.style.background = '#e74c3c';
-                expenseBtn.style.color = 'white';
-                incomeBtn.style.background = '#e0e0e0';
-                incomeBtn.style.color = '#333';
+                // Expense selected - outlined red (no fill)
+                expenseBtn.style.background = 'white';
+                expenseBtn.style.color = '#e74c3c';
+                expenseBtn.style.border = '2px solid #e74c3c';
+                // Income not selected - outlined green
+                incomeBtn.style.background = 'white';
+                incomeBtn.style.color = '#27ae60';
+                incomeBtn.style.border = '2px solid #27ae60';
                 hint.textContent = 'Expense (will be negative)';
             } else {
-                incomeBtn.style.background = '#27ae60';
-                incomeBtn.style.color = 'white';
-                expenseBtn.style.background = '#e0e0e0';
-                expenseBtn.style.color = '#333';
+                // Income selected - outlined green (no fill)
+                incomeBtn.style.background = 'white';
+                incomeBtn.style.color = '#27ae60';
+                incomeBtn.style.border = '2px solid #27ae60';
+                // Expense not selected - outlined red
+                expenseBtn.style.background = 'white';
+                expenseBtn.style.color = '#e74c3c';
+                expenseBtn.style.border = '2px solid #e74c3c';
                 hint.textContent = 'Income (will be positive)';
             }
         }
