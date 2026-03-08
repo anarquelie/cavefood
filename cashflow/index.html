@@ -552,9 +552,10 @@
                             <option value="Living">🏠 Living</option>
                             <option value="Food">🥕 Food</option>
                             <option value="Services">💳 Services</option>
+                            <option value="Social">🍻 Social</option>
                             <option value="Débit différé">💀 Débit différé</option>
                             <option value="Pets">🐹 Pets</option>
-                            <option value="Other">📦 Other</option>
+                            <option value="Other">🧾 Other</option>
                         </select>
                     </div>
                     
@@ -792,6 +793,7 @@
                 'Living': '#667eea',
                 'Food': '#27ae60',
                 'Services': '#e74c3c',
+                'Social': '#9b59b6',
                 'Débit différé': '#2c3e50',
                 'Pets': '#e91e63',
                 'Other': '#f39c12'
@@ -818,9 +820,10 @@
                 'Living': '🏠',
                 'Food': '🥕',
                 'Services': '💳',
+                'Social': '🍻',
                 'Débit différé': '💀',
                 'Pets': '🐹',
-                'Other': '📦'
+                'Other': '🧾'
             };
             
             breakdown.innerHTML = `
@@ -867,9 +870,10 @@
                 'Living': '🏠',
                 'Food': '🥕',
                 'Services': '💳',
+                'Social': '🍻',
                 'Débit différé': '💀',
                 'Pets': '🐹',
-                'Other': '📦'
+                'Other': '🧾'
             };
             
             // Clear canvas
@@ -1554,10 +1558,11 @@
                 'Living': '🏠',
                 'Food': '🥕',
                 'Services': '💳',
+                'Social': '🍻',
                 'Débit différé': '💀',
                 'Pets': '🐹',
                 'Income': '💰',
-                'Other': '📦'
+                'Other': '🧾'
             };
             
             // Calculate running balance (only up to each transaction's date)
@@ -1731,7 +1736,7 @@
             const date = new Date(dateStr);
             const day = date.getDate();
             const month = date.toLocaleString('en', { month: 'short' });
-            return `${day} ${month}`;
+            return `${day} ${m👍onth}`;
         }
 
         // Initialize on load
