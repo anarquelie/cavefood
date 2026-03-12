@@ -557,7 +557,6 @@
                             <option value="Services">💳 Services</option>
                             <option value="Social">🍻 Social</option>
                             <option value="Well-being">💆 Well-being</option>
-                            <option value="Débit différé">💀 Débit différé</option>
                             <option value="Pets">🐹 Pets</option>
                             <option value="Other">🧾 Other</option>
                         </select>
@@ -651,10 +650,9 @@
                 return 'Income';
             }
             
-            // Débit différé - check comment for "DD"
-            if (comment && comment.toUpperCase().includes('DD')) {
-                return 'Débit différé';
-            }
+            // NOTE: We no longer assign "Débit différé" as a category
+            // DD transactions are identified by comment "DD" for calculations only
+            // They should be categorized by their actual expense type (Living, Services, etc.)
             
             // Well-being: spa, massage, hair, beauty, gym, sports
             if (eventLower.includes('spa') || 
@@ -673,7 +671,9 @@
             if (eventLower.includes('guinea') || 
                 eventLower.includes('pet') ||
                 eventLower.includes('cochon') ||
-                eventLower.includes('vet')) {
+                eventLower.includes('vet') ||
+                eventLower.includes('advetia') ||
+                eventLower.includes('animalis')) {
                 return 'Pets';
             }
             
@@ -683,6 +683,7 @@
                 eventLower.includes('sosh') || 
                 eventLower.includes('electricity') ||
                 eventLower.includes('electricité') ||
+                eventLower.includes('edf') ||
                 eventLower.includes('bouygues') ||
                 eventLower.includes('transport') ||
                 eventLower.includes('navigo')) {
@@ -693,19 +694,28 @@
             if (eventLower.includes('groceries') || 
                 eventLower.includes('grocer') ||
                 eventLower.includes('lidl') ||
+                eventLower.includes('intermarche') ||
+                eventLower.includes('auchan') ||
                 eventLower.includes('supermarket') ||
                 eventLower.includes('canteen') ||
-                eventLower.includes('cantine')) {
+                eventLower.includes('cantine') ||
+                eventLower.includes('eurest')) {
                 return 'Food';
             }
             
-            // Social: Bars, restaurants, entertainment
+            // Social: Bars, restaurants, entertainment, cinema, tobacco
             if (eventLower.includes('bar') || 
                 eventLower.includes('restaurant') ||
                 eventLower.includes('resto') ||
+                eventLower.includes('burger') ||
+                eventLower.includes('mcdonald') ||
+                eventLower.includes('tacos') ||
                 eventLower.includes('cinema') ||
+                eventLower.includes('ugc') ||
                 eventLower.includes('club') ||
-                eventLower.includes('drink')) {
+                eventLower.includes('tabac') ||
+                eventLower.includes('drink') ||
+                eventLower.includes('bolt')) {
                 return 'Social';
             }
             
@@ -714,10 +724,13 @@
                 eventLower.includes('insurance') || 
                 eventLower.includes('assurance') ||
                 eventLower.includes('cotisations') ||
+                eventLower.includes('bpce') ||
                 eventLower.includes('apple') ||
+                eventLower.includes('icloud') ||
                 eventLower.includes('rozmova') ||
                 eventLower.includes('amazon') ||
-                eventLower.includes('malakoff')) {
+                eventLower.includes('malakoff') ||
+                eventLower.includes('orange')) {
                 return 'Services';
             }
             
@@ -793,7 +806,6 @@
                 'Services': '#e74c3c',
                 'Social': '#9b59b6',
                 'Well-being': '#3498db',
-                'Débit différé': '#2c3e50',
                 'Pets': '#e91e63',
                 'Other': '#f39c12'
             };
@@ -816,7 +828,6 @@
                 'Services': '💳',
                 'Social': '🍻',
                 'Well-being': '💆',
-                'Débit différé': '💀',
                 'Pets': '🐹',
                 'Other': '🧾'
             };
@@ -865,7 +876,6 @@
                 'Services': '💳',
                 'Social': '🍻',
                 'Well-being': '💆',
-                'Débit différé': '💀',
                 'Pets': '🐹',
                 'Other': '🧾'
             };
@@ -1360,7 +1370,8 @@
                 
                 nextMonthTransactions.forEach(t => {
                     const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                    if (category === 'Débit différé') {
+                    // Débit différé is identified by comment "DD", not category
+                    if (t.comment && t.comment.toUpperCase().includes('DD')) {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
                         nextMonthLiving += t.amount;
@@ -1458,7 +1469,6 @@
                 'Services': '💳',
                 'Social': '🍻',
                 'Well-being': '💆',
-                'Débit différé': '💀',
                 'Pets': '🐹',
                 'Income': '💰',
                 'Other': '🧾'
@@ -1599,7 +1609,8 @@
                 
                 nextMonthTransactions.forEach(t => {
                     const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                    if (category === 'Débit différé') {
+                    // Débit différé is identified by comment "DD", not category
+                    if (t.comment && t.comment.toUpperCase().includes('DD')) {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
                         nextMonthLiving += t.amount;
