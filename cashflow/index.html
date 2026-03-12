@@ -451,7 +451,7 @@
             <div class="setup-steps">
                 <p><strong>Follow these steps to connect:</strong></p>
                 <ol>
-                    <li>Your Google Sheet should have columns: <code>Date | Event | Amount | Completed | Comment</code></li>
+                    <li>Your Google Sheet should have columns: <code>Date | Event | Amount | Category | Completed | Comment</code></li>
                     <li>Open your sheet → <strong>Extensions → Apps Script</strong></li>
                     <li>Copy the script from the setup guide</li>
                     <li>Deploy as Web App (Execute as: Me, Access: Anyone)</li>
@@ -459,6 +459,9 @@
                 </ol>
                 <p style="margin-top: 10px; font-size: 13px; color: #999;">
                     <strong>URL format:</strong> https://script.google.com/macros/s/ABC.../exec
+                </p>
+                <p style="margin-top: 10px; font-size: 13px; color: #e74c3c;">
+                    <strong>⚠️ IMPORTANT:</strong> Add a new "Category" column (column D) after Amount!
                 </p>
             </div>
             <div class="auth-section">
@@ -553,6 +556,7 @@
                             <option value="Food">🥕 Food</option>
                             <option value="Services">💳 Services</option>
                             <option value="Social">🍻 Social</option>
+                            <option value="Well-being">💆 Well-being</option>
                             <option value="Débit différé">💀 Débit différé</option>
                             <option value="Pets">🐹 Pets</option>
                             <option value="Other">🧾 Other</option>
@@ -607,27 +611,13 @@
         let scriptUrl = null;
         let transactions = [];
         let showFuture = false;
-        let transactionType = 'expense'; // Default to expense
-        let editingTransactionId = null; // Track which transaction is being edited
-        let showingStatistics = false; // Track statistics view
-        let chartInstance = null; // Store chart instance
-        let statsPeriod = 'thisMonth'; // Track period: 'thisMonth', 'nextMonth', 'allTime'
-        let categoryMemory = JSON.parse(localStorage.getItem('categoryMemory') || '{}'); // Store category choices
+        let transactionType = 'expense';
+        let editingTransactionId = null;
+        let showingStatistics = false;
+        let chartInstance = null;
+        let statsPeriod = 'thisMonth';
 
-        // Save category choice for an event name
-        function rememberCategory(eventName, category) {
-            categoryMemory[eventName.toLowerCase()] = category;
-            localStorage.setItem('categoryMemory', JSON.stringify(categoryMemory));
-        }
-
-        // Get remembered category for an event name
-        function getRememberedCategory(eventName) {
-            return categoryMemory[eventName.toLowerCase()] || null;
-        }
-
-        // Toggle statistics period
         function toggleStatsPeriod() {
-            // Cycle through: This month → Next month → All time → This month
             if (statsPeriod === 'thisMonth') {
                 statsPeriod = 'nextMonth';
             } else if (statsPeriod === 'nextMonth') {
@@ -648,17 +638,10 @@
             renderStatistics();
         }
 
-        // Categorize transaction based on event name
         function categorizeTransaction(event, amount, comment, savedCategory) {
-            // If there's a manually saved category, use it
-            if (savedCategory && savedCategory !== 'auto') {
+            // If there's a manually saved category in the sheet, use it
+            if (savedCategory && savedCategory !== 'auto' && savedCategory !== '') {
                 return savedCategory;
-            }
-            
-            // Check if we have a remembered category for this event name
-            const remembered = getRememberedCategory(event);
-            if (remembered) {
-                return remembered;
             }
             
             const eventLower = event.toLowerCase();
@@ -673,10 +656,24 @@
                 return 'Débit différé';
             }
             
+            // Well-being: spa, massage, hair, beauty, gym, sports
+            if (eventLower.includes('spa') || 
+                eventLower.includes('massage') ||
+                eventLower.includes('hair') ||
+                eventLower.includes('salon') ||
+                eventLower.includes('beauty') ||
+                eventLower.includes('gym') ||
+                eventLower.includes('sport') ||
+                eventLower.includes('yoga') ||
+                eventLower.includes('therapy')) {
+                return 'Well-being';
+            }
+            
             // Pets - guinea pigs and pet-related
             if (eventLower.includes('guinea') || 
                 eventLower.includes('pet') ||
-                eventLower.includes('cochon')) {
+                eventLower.includes('cochon') ||
+                eventLower.includes('vet')) {
                 return 'Pets';
             }
             
@@ -687,7 +684,8 @@
                 eventLower.includes('electricity') ||
                 eventLower.includes('electricité') ||
                 eventLower.includes('bouygues') ||
-                eventLower.includes('transport')) {
+                eventLower.includes('transport') ||
+                eventLower.includes('navigo')) {
                 return 'Living';
             }
             
@@ -699,6 +697,16 @@
                 eventLower.includes('canteen') ||
                 eventLower.includes('cantine')) {
                 return 'Food';
+            }
+            
+            // Social: Bars, restaurants, entertainment
+            if (eventLower.includes('bar') || 
+                eventLower.includes('restaurant') ||
+                eventLower.includes('resto') ||
+                eventLower.includes('cinema') ||
+                eventLower.includes('club') ||
+                eventLower.includes('drink')) {
+                return 'Social';
             }
             
             // Services: Subscriptions, insurance, bank fees
@@ -717,7 +725,6 @@
             return 'Other';
         }
 
-        // Toggle statistics view
         function toggleStatistics() {
             showingStatistics = !showingStatistics;
             const listContainer = document.getElementById('transactionListContainer');
@@ -736,7 +743,6 @@
             }
         }
 
-        // Render statistics with pie chart
         function renderStatistics() {
             let completedTransactions;
             
@@ -745,46 +751,38 @@
             const currentYear = today.getFullYear();
             
             if (statsPeriod === 'thisMonth') {
-                // This month: only completed transactions
                 completedTransactions = transactions.filter(t => {
                     if (t.status !== '✅') return false;
                     const tDate = new Date(t.date);
                     return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
                 });
             } else if (statsPeriod === 'nextMonth') {
-                // Next month: BOTH completed and expected transactions
                 const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
                 const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
                 
                 completedTransactions = transactions.filter(t => {
                     const tDate = new Date(t.date);
                     return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
-                    // No status filter - includes both ✅ and ⏳
                 });
             } else {
-                // All time: only completed transactions
                 completedTransactions = transactions.filter(t => t.status === '✅');
             }
             
-            // Group by category
             const categoryTotals = {};
             completedTransactions.forEach(t => {
-                const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
+                const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                 if (!categoryTotals[category]) {
                     categoryTotals[category] = 0;
                 }
-                // Only count expenses (negative amounts)
                 if (t.amount < 0) {
                     categoryTotals[category] += Math.abs(t.amount);
                 }
             });
             
-            // Remove Income category from chart (we only show expenses)
             delete categoryTotals['Income'];
             
-            // Prepare data for chart - sort by amount descending
             const sortedCategories = Object.entries(categoryTotals)
-                .sort((a, b) => b[1] - a[1]); // Sort by amount, largest first
+                .sort((a, b) => b[1] - a[1]);
             
             const categories = sortedCategories.map(([cat]) => cat);
             const amounts = sortedCategories.map(([, amt]) => amt);
@@ -794,33 +792,30 @@
                 'Food': '#27ae60',
                 'Services': '#e74c3c',
                 'Social': '#9b59b6',
+                'Well-being': '#3498db',
                 'Débit différé': '#2c3e50',
                 'Pets': '#e91e63',
                 'Other': '#f39c12'
             };
             
-            // Create pie chart
             const canvas = document.getElementById('expenseChart');
             const ctx = canvas.getContext('2d');
             
-            // Destroy previous chart if exists
             if (chartInstance) {
                 chartInstance.destroy();
             }
             
-            // Simple pie chart implementation
             drawPieChart(ctx, categories, amounts, colors);
             
-            // Show category breakdown
             const breakdown = document.getElementById('categoryBreakdown');
             const total = amounts.reduce((sum, val) => sum + val, 0);
             
-            // Emoji mapping for breakdown
             const categoryEmojis = {
                 'Living': '🏠',
                 'Food': '🥕',
                 'Services': '💳',
                 'Social': '🍻',
+                'Well-being': '💆',
                 'Débit différé': '💀',
                 'Pets': '🐹',
                 'Other': '🧾'
@@ -858,47 +853,42 @@
             `;
         }
 
-        // Draw simple pie chart
         function drawPieChart(ctx, labels, data, colors) {
             const canvas = ctx.canvas;
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const radius = Math.min(centerX, centerY) - 80;
             
-            // Emoji mapping
             const emojis = {
                 'Living': '🏠',
                 'Food': '🥕',
                 'Services': '💳',
                 'Social': '🍻',
+                'Well-being': '💆',
                 'Débit différé': '💀',
                 'Pets': '🐹',
                 'Other': '🧾'
             };
             
-            // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             const total = data.reduce((sum, val) => sum + val, 0);
-            let currentAngle = -Math.PI / 2; // Start at top
+            let currentAngle = -Math.PI / 2;
             
             data.forEach((value, index) => {
                 const sliceAngle = (value / total) * 2 * Math.PI;
                 
-                // Draw slice
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
                 ctx.lineTo(centerX, centerY);
                 ctx.fillStyle = colors[labels[index]];
                 ctx.fill();
                 
-                // Draw emoji label - much larger
                 const labelAngle = currentAngle + sliceAngle / 2;
                 const labelX = centerX + (radius * 0.65) * Math.cos(labelAngle);
                 const labelY = centerY + (radius * 0.65) * Math.sin(labelAngle);
                 
-                // Larger emoji size based on canvas size
-                const emojiSize = Math.floor(canvas.width / 12); // Responsive emoji size
+                const emojiSize = Math.floor(canvas.width / 12);
                 ctx.font = `${emojiSize}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -908,25 +898,19 @@
             });
         }
 
-        // Show transactions for a specific category
         function showCategoryTransactions(category) {
             const container = document.getElementById('categoryTransactions');
-            
             const now = new Date();
             
-            // Get transactions for this category with period filtering
             const categoryTransactions = transactions
                 .filter(t => {
-                    // Check category match
-                    if (categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory) !== category) return false;
+                    if (categorizeTransaction(t.event, t.amount, t.comment, t.category) !== category) return false;
                     
-                    // Apply period filter
                     const tDate = new Date(t.date);
                     if (statsPeriod === 'thisMonth') {
                         if (tDate.getMonth() !== now.getMonth() || tDate.getFullYear() !== now.getFullYear()) {
                             return false;
                         }
-                        // This month: only completed
                         if (t.status !== '✅') return false;
                     } else if (statsPeriod === 'nextMonth') {
                         const nextMonth = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
@@ -934,9 +918,7 @@
                         if (tDate.getMonth() !== nextMonth || tDate.getFullYear() !== nextYear) {
                             return false;
                         }
-                        // Next month: both completed and expected (no status filter)
                     } else {
-                        // All time: only completed
                         if (t.status !== '✅') return false;
                     }
                     
@@ -983,7 +965,6 @@
             `;
         }
 
-        // Set transaction type
         function setTransactionType(type) {
             transactionType = type;
             const expenseBtn = document.getElementById('expenseBtn');
@@ -991,21 +972,17 @@
             const hint = document.getElementById('amountHint');
             
             if (type === 'expense') {
-                // Expense selected - outlined red (no fill)
                 expenseBtn.style.background = 'white';
                 expenseBtn.style.color = '#e74c3c';
                 expenseBtn.style.border = '2px solid #e74c3c';
-                // Income not selected - outlined green
                 incomeBtn.style.background = 'white';
                 incomeBtn.style.color = '#27ae60';
                 incomeBtn.style.border = '2px solid #27ae60';
                 hint.textContent = 'Expense (will be negative)';
             } else {
-                // Income selected - outlined green (no fill)
                 incomeBtn.style.background = 'white';
                 incomeBtn.style.color = '#27ae60';
                 incomeBtn.style.border = '2px solid #27ae60';
-                // Expense not selected - outlined red
                 expenseBtn.style.background = 'white';
                 expenseBtn.style.color = '#e74c3c';
                 expenseBtn.style.border = '2px solid #e74c3c';
@@ -1013,7 +990,6 @@
             }
         }
 
-        // Initialize
         function init() {
             const savedScriptUrl = localStorage.getItem('scriptUrl');
             if (savedScriptUrl) {
@@ -1026,14 +1002,12 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
             
-            // Add listener to date input to auto-set status
             document.getElementById('dateInput').addEventListener('change', function(e) {
                 const selectedDate = new Date(e.target.value);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
                 selectedDate.setHours(0, 0, 0, 0);
                 
-                // If future date, set status to Expected
                 if (selectedDate > todayDate) {
                     document.getElementById('statusInput').value = '⏳';
                 } else {
@@ -1042,7 +1016,6 @@
             });
         }
 
-        // Connect to Google Sheet
         function connectSheet() {
             const inputScriptUrl = document.getElementById('scriptUrlInput').value.trim();
             
@@ -1060,7 +1033,6 @@
             loadFromSheet();
         }
 
-        // Disconnect from sheet
         function disconnectSheet() {
             if (confirm('Disconnect from Google Sheet? Your data will remain in the sheet.')) {
                 scriptUrl = null;
@@ -1069,7 +1041,6 @@
             }
         }
 
-        // Load data from Google Sheet via Apps Script
         async function loadFromSheet() {
             if (!scriptUrl) return;
             
@@ -1077,42 +1048,29 @@
             
             try {
                 const url = `${scriptUrl}?action=read`;
-                console.log('Fetching from:', url);
-                
                 const response = await fetch(url);
-                
-                console.log('Response status:', response.status);
                 
                 if (!response.ok) {
                     throw new Error('Failed to load sheet. Check your Apps Script URL.');
                 }
                 
                 const result = await response.json();
-                console.log('Raw data from sheet:', result);
                 
                 if (!result.success) {
                     throw new Error(result.error || 'Unknown error');
                 }
                 
                 const rows = result.data || [];
-                console.log(`Processing ${rows.length} rows`);
-                
-                // Skip header row (first row)
                 const dataRows = rows.slice(1);
                 
                 transactions = dataRows.map((row, index) => {
-                    console.log(`Row ${index}:`, row);
-                    
-                    // Parse date (ISO format: "2026-01-27" or "2026-01-27T00:00:00.000Z")
                     let date;
                     let dateWarning = '';
                     try {
                         if (row[0]) {
-                            // Handle both string dates and ISO timestamps
                             const dateStr = typeof row[0] === 'string' ? row[0] : row[0].toString();
                             date = new Date(dateStr);
                             if (isNaN(date.getTime())) {
-                                console.warn(`Invalid date for row ${index}: ${row[0]} - using today instead`);
                                 dateWarning = ` ⚠️ Invalid date: ${row[0]}`;
                                 date = new Date();
                             }
@@ -1120,32 +1078,26 @@
                             date = new Date();
                         }
                     } catch (e) {
-                        console.error(`Error parsing date for row ${index}:`, e);
                         dateWarning = ` ⚠️ Date error`;
                         date = new Date();
                     }
                     
-                    // Parse completed status (true/false boolean or "TRUE"/"FALSE" string → emoji)
-                    const completed = row[3];
-                    console.log(`Row ${index} status value:`, completed, `Type:`, typeof completed);
+                    const completed = row[4];
                     let status = '✅';
-                    // Handle both boolean false and string variations
                     if (completed === false || completed === 'false' || completed === 'False' || completed === 'FALSE' || completed === 'F') {
                         status = '⏳';
                     }
-                    console.log(`Row ${index} final status:`, status);
                     
                     return {
                         id: index,
                         date: date.toISOString().split('T')[0],
                         event: row[1] || '',
                         amount: parseFloat(row[2]) || 0,
+                        category: row[3] || '', // Category from column D (index 3)
                         status: status,
-                        comment: ((row[4] !== undefined && row[4] !== null) ? row[4] : '') + dateWarning
+                        comment: ((row[5] !== undefined && row[5] !== null) ? row[5] : '') + dateWarning
                     };
                 });
-                
-                console.log('Processed transactions:', transactions);
                 
                 renderTransactions();
                 updateBalance();
@@ -1157,34 +1109,32 @@
             }
         }
 
-        // Save to Google Sheet via Apps Script
         async function saveToSheet() {
             if (!scriptUrl) return;
             
             updateSyncStatus('syncing', 'Saving to Google Sheets...');
             
             try {
-                // Sort by date
                 const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
                 
-                // Prepare rows
                 const rows = sorted.map(t => {
                     const completed = (t.status === '✅' || t.status === '▶️') ? 'TRUE' : 'FALSE';
+                    const categoryToSave = t.category && t.category !== 'auto' ? t.category : '';
                     return [
                         t.date,
                         t.event,
                         t.amount,
+                        categoryToSave, // Category in column D
                         completed,
                         t.comment
                     ];
                 });
                 
-                // Add header
-                rows.unshift(['Date', 'Event', 'Amount', 'Completed', 'Comment']);
+                rows.unshift(['Date', 'Event', 'Amount', 'Category', 'Completed', 'Comment']);
                 
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
-                    mode: 'no-cors', // Required for Apps Script
+                    mode: 'no-cors',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -1194,10 +1144,6 @@
                     })
                 });
                 
-                // Note: no-cors means we can't read the response, but the write should succeed
-                console.log('Write request sent');
-                
-                // Reload to verify
                 setTimeout(() => {
                     loadFromSheet();
                 }, 1000);
@@ -1210,24 +1156,20 @@
             }
         }
 
-        // Update sync status
         function updateSyncStatus(status, message) {
             const statusEl = document.getElementById('syncStatus');
             statusEl.className = `sync-status ${status}`;
             statusEl.textContent = message;
         }
 
-        // Refresh from sheet
         function refreshFromSheet() {
             loadFromSheet();
         }
 
-        // Toggle form visibility
         function toggleForm() {
             const form = document.getElementById('transactionForm');
             form.classList.toggle('hidden');
             
-            // Reset editing state if closing form
             if (form.classList.contains('hidden')) {
                 editingTransactionId = null;
                 document.querySelector('.form-title').textContent = 'New transaction';
@@ -1237,39 +1179,32 @@
             }
         }
 
-        // Edit transaction
         function editTransaction(transactionId) {
             const transaction = transactions.find(t => t.id === transactionId);
             if (!transaction) return;
             
-            // Populate form
             document.getElementById('dateInput').value = transaction.date;
             document.getElementById('eventInput').value = transaction.event;
             document.getElementById('amountInput').value = Math.abs(transaction.amount);
             document.getElementById('statusInput').value = transaction.status;
             document.getElementById('commentInput').value = transaction.comment || '';
             
-            // Set category
-            document.getElementById('categoryInput').value = transaction.savedCategory || 'auto';
+            document.getElementById('categoryInput').value = transaction.category || 'auto';
             
-            // Set transaction type based on amount
             if (transaction.amount < 0) {
                 setTransactionType('expense');
             } else {
                 setTransactionType('income');
             }
             
-            // Update form title, button text, and tracking
             editingTransactionId = transactionId;
             document.querySelector('.form-title').textContent = 'Edit transaction';
             document.getElementById('saveBtn').textContent = 'Update transaction';
             document.getElementById('deleteBtn').classList.remove('hidden');
             
-            // Show form
             document.getElementById('transactionForm').classList.remove('hidden');
         }
 
-        // Delete transaction
         async function deleteTransaction() {
             if (!confirm('Delete this transaction?')) {
                 return;
@@ -1282,15 +1217,12 @@
                 renderTransactions();
                 updateBalance();
                 
-                // Save to Google Sheet
                 await saveToSheet();
                 
-                // Hide form
                 toggleForm();
             }
         }
 
-        // Add or update transaction
         async function addTransaction(event) {
             event.preventDefault();
             
@@ -1298,7 +1230,6 @@
             const eventName = document.getElementById('eventInput').value;
             let amount = parseFloat(document.getElementById('amountInput').value);
             
-            // Apply transaction type (expense = negative, income = positive)
             if (transactionType === 'expense' && amount > 0) {
                 amount = -amount;
             } else if (transactionType === 'income' && amount < 0) {
@@ -1309,13 +1240,7 @@
             const comment = document.getElementById('commentInput').value;
             const selectedCategory = document.getElementById('categoryInput').value;
 
-            // Save category choice if not auto-detect
-            if (selectedCategory !== 'auto') {
-                rememberCategory(eventName, selectedCategory);
-            }
-
             if (editingTransactionId !== null) {
-                // Update existing transaction
                 const index = transactions.findIndex(t => t.id === editingTransactionId);
                 if (index !== -1) {
                     transactions[index] = {
@@ -1325,12 +1250,11 @@
                         amount: amount,
                         status: status,
                         comment: comment,
-                        savedCategory: selectedCategory !== 'auto' ? selectedCategory : undefined
+                        category: selectedCategory !== 'auto' ? selectedCategory : ''
                     };
                 }
                 editingTransactionId = null;
             } else {
-                // Add new transaction
                 const transaction = {
                     id: Date.now(),
                     date: date,
@@ -1338,7 +1262,7 @@
                     amount: amount,
                     status: status,
                     comment: comment,
-                    savedCategory: selectedCategory !== 'auto' ? selectedCategory : undefined
+                    category: selectedCategory !== 'auto' ? selectedCategory : ''
                 };
                 transactions.push(transaction);
             }
@@ -1346,33 +1270,28 @@
             renderTransactions();
             updateBalance();
             
-            // Save to Google Sheet
             await saveToSheet();
             
-            // Reset form and hide
             document.getElementById('addForm').reset();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
-            setTransactionType('expense'); // Reset to expense default
+            setTransactionType('expense');
             document.querySelector('.form-title').textContent = 'New transaction';
             document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
             document.getElementById('categoryInput').value = 'auto';
             toggleForm();
         }
 
-        // Calculate balance
         function calculateBalance() {
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Reset to start of day for comparison
+            today.setHours(0, 0, 0, 0);
             
-            // Only include transactions up to today
             const todayTransactions = transactions.filter(t => {
                 const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 return transactionDate <= today;
             });
             
-            // Future transactions
             const futureTransactions = transactions.filter(t => {
                 const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
@@ -1387,11 +1306,9 @@
                 .filter(t => t.status === '⏳')
                 .reduce((sum, t) => sum + t.amount, 0);
             
-            // Find next salary (future transactions with positive amount)
             const sortedFuture = [...futureTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
             const nextSalaryIndex = sortedFuture.findIndex(t => t.amount > 0 && t.event.toLowerCase().includes('salary'));
             
-            // Upcoming this month - all future transactions in the current month
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
             const upcomingThisMonth = futureTransactions.filter(t => {
@@ -1399,12 +1316,10 @@
                 return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            // Find next "Débit différé" - check comment for "DD"
             const nextDebitDiffere = sortedFuture.find(t => 
                 t.comment && t.comment.toUpperCase().includes('DD')
             );
             
-            // Calculate "My money" and "Available next month"
             let transactionsUntilDebit = 0;
             let balanceAfterNextDebit = null;
             let balanceAfterJustDebit = null;
@@ -1416,7 +1331,6 @@
                 const nextMonth = firstDebitDate.getMonth();
                 const nextYear = firstDebitDate.getFullYear();
                 
-                // Get ALL Débit différé transactions (comment = "DD") from the same month as the first one
                 const nextMonthDebitDiffere = sortedFuture.filter(t => {
                     const tDate = new Date(t.date);
                     return (t.comment && t.comment.toUpperCase().includes('DD')) &&
@@ -1424,12 +1338,9 @@
                            tDate.getFullYear() === nextYear;
                 });
                 
-                // Sum all débit différé amounts from next month
                 nextDebitAmount = nextMonthDebitDiffere.reduce((sum, t) => sum + t.amount, 0);
                 balanceAfterJustDebit = available + nextDebitAmount;
                 
-                // Calculate "Available next month" = Available today + This month's salary - Next month's (DD + Living + Services)
-                // Find this month's salary
                 const thisMonthSalary = sortedFuture.filter(t => {
                     const tDate = new Date(t.date);
                     return t.amount > 0 && 
@@ -1438,7 +1349,6 @@
                            tDate.getFullYear() === currentYear;
                 }).reduce((sum, t) => sum + t.amount, 0);
                 
-                // Get next month's expenses by category
                 const nextMonthTransactions = sortedFuture.filter(t => {
                     const tDate = new Date(t.date);
                     return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
@@ -1449,7 +1359,7 @@
                 let nextMonthServices = 0;
                 
                 nextMonthTransactions.forEach(t => {
-                    const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
+                    const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                     if (category === 'Débit différé') {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
@@ -1476,16 +1386,13 @@
             };
         }
 
-        // Update balance display
         function updateBalance() {
             const { total, available, pendingToday, upcomingThisMonth, balanceAfterNextDebit, balanceAfterJustDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
             
-            // My Money (main display) = the "Debt" value (balance after next debit)
             const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
             const myMoneyEl = document.getElementById('myMoneyBalance');
             myMoneyEl.textContent = `€${myMoney.toFixed(2)}`;
             
-            // Color coding: red if negative, green if positive
             if (myMoney < 0) {
                 myMoneyEl.classList.add('negative');
                 myMoneyEl.classList.remove('positive');
@@ -1495,12 +1402,10 @@
                 myMoneyEl.style.color = '#27ae60';
             }
             
-            // Available in account (in the balance row)
             const availableEl = document.getElementById('availableAmount');
             availableEl.textContent = `€${available.toFixed(2)}`;
             availableEl.style.color = available < 0 ? '#e74c3c' : '#667eea';
             
-            // Balance after next débit différé (all transactions until debit)
             const afterDebitEl = document.getElementById('afterDebitBalance');
             if (balanceAfterNextDebit !== null) {
                 afterDebitEl.textContent = `€${balanceAfterNextDebit.toFixed(2)}`;
@@ -1514,11 +1419,9 @@
                 afterDebitEl.style.color = '#999';
             }
             
-            // Update future count
             document.getElementById('futureCount').textContent = futureCount;
         }
 
-        // Render transactions
         function renderTransactions() {
             const container = document.getElementById('transactionsList');
             
@@ -1530,10 +1433,8 @@
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            // Filter transactions based on showFuture toggle
             let displayTransactions;
             if (showFuture) {
-                // Show everything up to the end of next month
                 const endNextMonth = new Date(today.getFullYear(), today.getMonth() + 2, 0);
                 endNextMonth.setHours(23, 59, 59, 999);
 
@@ -1542,7 +1443,6 @@
                     return transactionDate <= endNextMonth;
                 });
             } else {
-                // Show only up to today
                 displayTransactions = transactions.filter(t => {
                     const transactionDate = new Date(t.date);
                     transactionDate.setHours(0, 0, 0, 0);
@@ -1550,27 +1450,25 @@
                 });
             }
 
-            // Sort by date (newest first)
             const sorted = [...displayTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
             
-            // Category emoji mapping
             const categoryEmojis = {
                 'Living': '🏠',
                 'Food': '🥕',
                 'Services': '💳',
                 'Social': '🍻',
+                'Well-being': '💆',
                 'Débit différé': '💀',
                 'Pets': '🐹',
                 'Income': '💰',
                 'Other': '🧾'
             };
             
-            // Calculate running balance (only up to each transaction's date)
             const withBalances = sorted.reverse().map(t => {
                 const upToDate = transactions.filter(tx => {
                     return new Date(tx.date) <= new Date(t.date);
                 }).reduce((sum, tx) => sum + tx.amount, 0);
-                const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
+                const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                 return { ...t, balance: upToDate, category: category };
             }).reverse();
 
@@ -1599,13 +1497,11 @@
             `}).join('');
         }
         
-        // Toggle future transactions visibility
         function toggleFutureTransactions() {
             showFuture = !showFuture;
             const btn = document.getElementById('futureToggleBtn');
             const futureCount = calculateBalance().futureCount;
             
-            // Update button text while preserving the count span
             if (showFuture) {
                 btn.innerHTML = `Hide until next month (<span id="futureCount">${futureCount}</span>)`;
             } else {
@@ -1615,7 +1511,6 @@
             renderTransactions();
         }
 
-        // Show explanation for My Money
         function showMyMoneyExplanation() {
             const { available, balanceAfterJustDebit, nextDebitAmount } = calculateBalance();
             const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
@@ -1636,7 +1531,6 @@
             alert(explanation);
         }
 
-        // Show explanation for Available in Account
         function showAvailableExplanation() {
             const today = new Date();
             const todayStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
@@ -1659,7 +1553,6 @@
             alert(explanation);
         }
 
-        // Show explanation for Available Next Month
         function showNextMonthExplanation() {
             const { available } = calculateBalance();
             const today = new Date();
@@ -1674,7 +1567,6 @@
                 return transactionDate > todayDate;
             }).sort((a, b) => new Date(a.date) - new Date(b.date));
             
-            // Find this month's salary
             const thisMonthSalary = sortedFuture.filter(t => {
                 const tDate = new Date(t.date);
                 return t.amount > 0 && 
@@ -1683,7 +1575,6 @@
                        tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            // Find next month
             const nextDebitDiffere = sortedFuture.find(t => 
                 t.comment && t.comment.toUpperCase().includes('DD')
             );
@@ -1707,7 +1598,7 @@
                 let nextMonthServices = 0;
                 
                 nextMonthTransactions.forEach(t => {
-                    const category = categorizeTransaction(t.event, t.amount, t.comment, t.savedCategory);
+                    const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                     if (category === 'Débit différé') {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
@@ -1731,7 +1622,6 @@
             alert(explanation);
         }
 
-        // Format date for display
         function formatDate(dateStr) {
             const date = new Date(dateStr);
             const day = date.getDate();
@@ -1739,7 +1629,6 @@
             return `${day} ${month}`;
         }
 
-        // Initialize on load
         init();
     </script>
 </body>
