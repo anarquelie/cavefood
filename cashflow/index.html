@@ -1492,7 +1492,7 @@
                 <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}" onclick="editTransaction(${t.id})">
                     <div class="transaction-info">
                         <div class="transaction-event">
-                            ${categoryEmoji} ${t.event.length > 14 ? t.event.substring(0, 14) + '...' : t.event} <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 6px; vertical-align: middle;"></span>
+                            ${categoryEmoji} ${t.event.length > 14 ? t.event.substring(0, 14) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
                         </div>
                         <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
                         ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
