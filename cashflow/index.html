@@ -1169,7 +1169,7 @@
         function updateSyncStatus(status, message) {
             const statusEl = document.getElementById('syncStatus');
             statusEl.className = `sync-status ${status}`;
-            statusEl.textContent = message;
+            statusEl.innerHTML = message + ' <a href="#" onclick="disconnectSheet(); return false;" style="margin-left: 10px; color: inherit; text-decoration: underline;">Disconnect?</a>';
         }
 
         function refreshFromSheet() {
@@ -1489,13 +1489,13 @@
                 const categoryEmoji = categoryEmojis[t.category] || '❓';
                 
                 return `
-                <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}" onclick="editTransaction(${t.id})">
-                    <div class="transaction-info">
+                <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}; display: flex; align-items: stretch;" onclick="editTransaction(${t.id})">
+                    <div style="font-size: 32px; line-height: 1; margin-right: 12px; display: flex; align-items: center;">${categoryEmoji}</div>
+                    <div class="transaction-info" style="flex: 1;">
                         <div class="transaction-event">
-                            ${categoryEmoji} ${t.event.length > 14 ? t.event.substring(0, 14) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
+                            ${t.event.length > 14 ? t.event.substring(0, 14) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
                         </div>
-                        <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
-                        ${t.comment ? `<div class="transaction-comment">${t.comment}</div>` : ''}
+                        <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}${t.comment ? ` <span style="color: #999; margin: 0 4px;">•</span> <span style="color: #999; font-style: italic;">${t.comment}</span>` : ''}</div>
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
