@@ -501,7 +501,6 @@
                 <div class="controls">
                     <button class="btn btn-primary" onclick="toggleForm()">+ Add Transaction</button>
                     <button class="btn btn-secondary" onclick="toggleStatistics()" id="statsBtn">📊 Statistics</button>
-                    <button class="btn btn-secondary" onclick="refreshFromSheet()">🔄 Refresh</button>
                 </div>
             </div>
 
@@ -580,7 +579,7 @@
                 <div class="list-header">
                     <div class="list-title">Transactions</div>
                     <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
-                        Show until next month (<span id="futureCount">0</span>)
+                        Show future (<span id="futureCount">0</span>)
                     </button>
                 </div>
                 <div id="transactionsList">
@@ -1490,12 +1489,12 @@
                 
                 return `
                 <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}; display: flex; align-items: stretch;" onclick="editTransaction(${t.id})">
-                    <div style="font-size: 32px; line-height: 1; margin-right: 12px; display: flex; align-items: center;">${categoryEmoji}</div>
+                    <div style="font-size: 24px; line-height: 1; margin-right: 8px; display: flex; align-items: center;">${categoryEmoji}</div>
                     <div class="transaction-info" style="flex: 1;">
                         <div class="transaction-event">
-                            ${t.event.length > 14 ? t.event.substring(0, 14) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
+                            ${t.event.length > 10 ? t.event.substring(0, 10) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
                         </div>
-                        <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}${t.comment ? ` <span style="color: #999; margin: 0 4px;">•</span> <span style="color: #999; font-style: italic;">${t.comment}</span>` : ''}</div>
+                        <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
@@ -1513,9 +1512,9 @@
             const futureCount = calculateBalance().futureCount;
             
             if (showFuture) {
-                btn.innerHTML = `Hide until next month (<span id="futureCount">${futureCount}</span>)`;
+                btn.innerHTML = `Hide future (<span id="futureCount">${futureCount}</span>)`;
             } else {
-                btn.innerHTML = `Show until next month (<span id="futureCount">${futureCount}</span>)`;
+                btn.innerHTML = `Show future (<span id="futureCount">${futureCount}</span>)`;
             }
             
             renderTransactions();
