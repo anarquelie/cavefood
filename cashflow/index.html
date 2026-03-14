@@ -1492,9 +1492,9 @@
                     <div style="font-size: 24px; line-height: 1; margin-right: 8px; display: flex; align-items: center;">${categoryEmoji}</div>
                     <div class="transaction-info" style="flex: 1;">
                         <div class="transaction-event">
-                            ${t.event.length > 10 ? t.event.substring(0, 10) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
+                            ${t.event.length > 11 ? t.event.substring(0, 11) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
                         </div>
-                        <div class="transaction-date">${formatDate(t.date)}${isFuture ? ' (Future)' : ''}</div>
+                        <div class="transaction-date">${formatDate(t.date)}${t.comment ? ` (${t.comment.length > 6 ? t.comment.substring(0, 6) + '...' : t.comment})` : ''}</div>
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
