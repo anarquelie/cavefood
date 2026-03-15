@@ -486,6 +486,7 @@
             <div class="header">
                 <div class="balance-display">
                     <div style="position: relative;">
+                        <button onclick="toggleDDTracking()" id="ddBtn" style="position: absolute; top: -2px; left: 0; background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Débit différé tracking">💀</button>
                         <div class="balance-label" id="balanceDateLabel" style="text-align: center;">My money</div>
                         <button onclick="toggleStatistics()" id="statsBtn" style="position: absolute; top: -2px; right: 0; background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Statistics">📊</button>
                     </div>
@@ -602,6 +603,18 @@
                     <div id="categoryBreakdown"></div>
                 </div>
             </div>
+
+            <!-- DD Tracking View (hidden by default) -->
+            <div class="transaction-list hidden" id="ddTrackingContainer">
+                <div class="list-header">
+                    <div class="list-title">💀 Real money evolution</div>
+                </div>
+                <div style="padding: 0;">
+                    <div style="position: relative; width: 100%; height: 0; padding-bottom: 100%;">
+                        <canvas id="ddChart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -612,8 +625,35 @@
         let transactionType = 'expense';
         let editingTransactionId = null;
         let showingStatistics = false;
+        let showingDDTracking = false;
         let chartInstance = null;
         let statsPeriod = 'thisMonth';
+
+        function toggleDDTracking() {
+            showingDDTracking = !showingDDTracking;
+            const listContainer = document.getElementById('transactionListContainer');
+            const statsContainer = document.getElementById('statisticsContainer');
+            const ddContainer = document.getElementById('ddTrackingContainer');
+            const statsBtn = document.getElementById('statsBtn');
+            const ddBtn = document.getElementById('ddBtn');
+            
+            if (showingDDTracking) {
+                listContainer.classList.add('hidden');
+                statsContainer.classList.add('hidden');
+                ddContainer.classList.remove('hidden');
+                ddBtn.textContent = '🏠';
+                ddBtn.title = 'Home';
+                showingStatistics = false;
+                statsBtn.textContent = '📊';
+                statsBtn.title = 'Statistics';
+                renderDDTracking();
+            } else {
+                listContainer.classList.remove('hidden');
+                ddContainer.classList.add('hidden');
+                ddBtn.textContent = '💀';
+                ddBtn.title = 'Débit différé tracking';
+            }
+        }
 
         function toggleStatsPeriod() {
             if (statsPeriod === 'thisMonth') {
@@ -634,6 +674,199 @@
             }
             
             renderStatistics();
+        }
+
+        function renderDDTracking() {
+            // Get DD transactions grouped by month
+            const ddByMonth = {};
+            const realMoneyByMonth = {};
+            
+            transactions.forEach(t => {
+                const date = new Date(t.date);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                
+                // Track DD amounts
+                if (t.comment && t.comment.toUpperCase().includes('DD')) {
+                    if (!ddByMonth[monthKey]) {
+                        ddByMonth[monthKey] = 0;
+                    }
+                    ddByMonth[monthKey] += Math.abs(t.amount);
+                }
+            });
+            
+            // Calculate real money before salary for each month
+            const sortedMonths = Object.keys(ddByMonth).sort().slice(-6);
+            
+            sortedMonths.forEach(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const monthStart = new Date(year, month - 1, 1);
+                const monthEnd = new Date(year, month, 0);
+                
+                // Get all transactions before month end
+                let balance = 0;
+                let salaryInMonth = 0;
+                
+                transactions.forEach(t => {
+                    const tDate = new Date(t.date);
+                    if (tDate <= monthEnd && t.status === '✅') {
+                        balance += t.amount;
+                        // Track salary in this month
+                        if (tDate >= monthStart && tDate <= monthEnd && t.amount > 0) {
+                            salaryInMonth += t.amount;
+                        }
+                    }
+                });
+                
+                // Real money = balance - next month's DD - living - services
+                const nextMonthKey = getNextMonthKey(monthKey);
+                const nextMonthDD = ddByMonth[nextMonthKey] || 0;
+                
+                // Get living and services for next month
+                let nextMonthLiving = 0;
+                let nextMonthServices = 0;
+                
+                transactions.forEach(t => {
+                    const tDate = new Date(t.date);
+                    const tMonthKey = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
+                    if (tMonthKey === nextMonthKey) {
+                        const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
+                        if (category === 'Living') nextMonthLiving += t.amount;
+                        if (category === 'Services') nextMonthServices += t.amount;
+                    }
+                });
+                
+                realMoneyByMonth[monthKey] = balance + nextMonthDD + nextMonthLiving + nextMonthServices - salaryInMonth;
+            });
+            
+            const realMoneyAmounts = sortedMonths.map(m => realMoneyByMonth[m] || 0);
+            const labels = sortedMonths.map(m => {
+                const [year, month] = m.split('-');
+                const date = new Date(year, month - 1);
+                return date.toLocaleDateString('en-US', { month: 'short' });
+            });
+            
+            // Setup canvas for high DPI
+            const canvas = document.getElementById('ddChart');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            
+            const width = rect.width;
+            const height = rect.height;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            if (realMoneyAmounts.length === 0) {
+                ctx.font = '16px sans-serif';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('No data available', width / 2, height / 2);
+                return;
+            }
+            
+            const padding = 60;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            
+            // Find max and round UP to nearest 100
+            const rawMax = Math.max(...realMoneyAmounts.map(Math.abs));
+            const maxAmount = Math.ceil(rawMax / 100) * 100;
+            
+            // Find min (could be negative for real money)
+            const rawMin = Math.min(0, ...realMoneyAmounts);
+            const minAmount = Math.floor(rawMin / 100) * 100;
+            
+            const range = maxAmount - minAmount;
+            
+            // Determine step size (200 for ranges < 1000, 500 for larger)
+            let stepSize = 200;
+            if (range > 2000) stepSize = 500;
+            if (range > 5000) stepSize = 1000;
+            
+            // Draw axes
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+            
+            // Draw grid lines and Y labels
+            for (let value = minAmount; value <= maxAmount; value += stepSize) {
+                const y = height - padding - ((value - minAmount) / range) * chartHeight;
+                
+                ctx.strokeStyle = '#f0f0f0';
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+                
+                ctx.fillStyle = '#999';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText('€' + value.toFixed(0), padding - 10, y + 4);
+            }
+            
+            // Helper function to calculate Y position
+            const getY = (value) => {
+                return height - padding - ((value - minAmount) / range) * chartHeight;
+            };
+            
+            // Draw Real Money line (solid, green/red based on value)
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            const realMoneyPoints = [];
+            for (let i = 0; i < realMoneyAmounts.length; i++) {
+                const x = padding + (chartWidth / (realMoneyAmounts.length - 1)) * i;
+                const y = getY(realMoneyAmounts[i]);
+                realMoneyPoints.push({ x, y, value: realMoneyAmounts[i] });
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            // Color based on overall trend
+            const avgValue = realMoneyAmounts.reduce((a, b) => a + b, 0) / realMoneyAmounts.length;
+            ctx.strokeStyle = avgValue >= 0 ? '#27ae60' : '#e74c3c';
+            ctx.stroke();
+            
+            // Draw Real Money points and labels
+            realMoneyPoints.forEach((point, i) => {
+                // Point
+                ctx.fillStyle = point.value >= 0 ? '#27ae60' : '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Amount label
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('€' + point.value.toFixed(0), point.x, point.y - 15);
+            });
+            
+            // Draw month labels
+            realMoneyPoints.forEach((point, i) => {
+                ctx.fillStyle = '#666';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(labels[i], point.x, height - padding + 20);
+            });
+        }
+        
+        function getNextMonthKey(monthKey) {
+            const [year, month] = monthKey.split('-');
+            const nextDate = new Date(year, month, 1);
+            return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
         }
 
         function categorizeTransaction(event, amount, comment, savedCategory) {
@@ -741,13 +974,19 @@
             showingStatistics = !showingStatistics;
             const listContainer = document.getElementById('transactionListContainer');
             const statsContainer = document.getElementById('statisticsContainer');
+            const ddContainer = document.getElementById('ddTrackingContainer');
             const statsBtn = document.getElementById('statsBtn');
+            const ddBtn = document.getElementById('ddBtn');
             
             if (showingStatistics) {
                 listContainer.classList.add('hidden');
                 statsContainer.classList.remove('hidden');
+                ddContainer.classList.add('hidden');
                 statsBtn.textContent = '🏠';
                 statsBtn.title = 'Home';
+                showingDDTracking = false;
+                ddBtn.textContent = '💀';
+                ddBtn.title = 'Débit différé tracking';
                 renderStatistics();
             } else {
                 listContainer.classList.remove('hidden');
