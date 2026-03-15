@@ -199,7 +199,7 @@
         }
 
         .btn-primary {
-            background: #667eea;
+            background: #27ae60;
             color: white;
         }
 
@@ -324,7 +324,7 @@
         }
 
         .transaction-item {
-            padding: 15px;
+            padding: 15px 0;
             border-bottom: 1px solid #f0f0f0;
             display: flex;
             justify-content: space-between;
@@ -335,6 +335,8 @@
 
         .transaction-item:hover {
             background: #f9f9f9;
+            padding: 15px 10px;
+            margin: 0 -10px;
         }
 
         .transaction-item:last-child {
@@ -483,7 +485,10 @@
             <!-- Balance Display -->
             <div class="header">
                 <div class="balance-display">
-                    <div class="balance-label" id="balanceDateLabel">My money</div>
+                    <div style="position: relative;">
+                        <div class="balance-label" id="balanceDateLabel" style="text-align: center;">My money</div>
+                        <button onclick="toggleStatistics()" id="statsBtn" style="position: absolute; top: -2px; right: 0; background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Statistics">📊</button>
+                    </div>
                     <div class="balance-amount" id="myMoneyBalance" onclick="showMyMoneyExplanation()" style="cursor: pointer;">€0.00</div>
                     
                     <div class="balance-row">
@@ -496,11 +501,6 @@
                             <div class="balance-item-value" id="afterDebitBalance">€0.00</div>
                         </div>
                     </div>
-                </div>
-                
-                <div class="controls">
-                    <button class="btn btn-primary" onclick="toggleForm()">+ Add Transaction</button>
-                    <button class="btn btn-secondary" onclick="toggleStatistics()" id="statsBtn">📊 Statistics</button>
                 </div>
             </div>
 
@@ -577,10 +577,10 @@
             <!-- Transaction List -->
             <div class="transaction-list" id="transactionListContainer">
                 <div class="list-header">
-                    <div class="list-title">Transactions</div>
                     <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
                         Show future (<span id="futureCount">0</span>)
                     </button>
+                    <button class="btn btn-primary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleForm()">Add transaction</button>
                 </div>
                 <div id="transactionsList">
                     <div class="empty-state">Loading from Google Sheets...</div>
@@ -595,8 +595,8 @@
                         This month
                     </button>
                 </div>
-                <div style="padding: 20px;">
-                    <div style="display: flex; justify-content: center; margin-bottom: 30px; overflow: hidden;">
+                <div style="padding: 5px 0 20px 0;">
+                    <div style="display: flex; justify-content: center; margin: 0; overflow: hidden;">
                         <canvas id="expenseChart" width="800" height="800" style="max-width: 100%; max-height: 400px; width: 400px; height: 400px;"></canvas>
                     </div>
                     <div id="categoryBreakdown"></div>
@@ -746,12 +746,14 @@
             if (showingStatistics) {
                 listContainer.classList.add('hidden');
                 statsContainer.classList.remove('hidden');
-                statsBtn.textContent = '📋 Transactions';
+                statsBtn.textContent = '🏠';
+                statsBtn.title = 'Home';
                 renderStatistics();
             } else {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
-                statsBtn.textContent = '📊 Statistics';
+                statsBtn.textContent = '📊';
+                statsBtn.title = 'Statistics';
             }
         }
 
@@ -832,7 +834,6 @@
             };
             
             breakdown.innerHTML = `
-                <h3 style="margin-bottom: 15px; color: #333;">Category breakdown</h3>
                 ${categories.map((cat, i) => {
                     const percentage = ((amounts[i] / total) * 100).toFixed(1);
                     return `
@@ -1492,7 +1493,7 @@
                     <div style="font-size: 24px; line-height: 1; margin-right: 8px; display: flex; align-items: center;">${categoryEmoji}</div>
                     <div class="transaction-info" style="flex: 1;">
                         <div class="transaction-event">
-                            ${t.event.length > 11 ? t.event.substring(0, 11) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
+                            ${t.event.length > 13 ? t.event.substring(0, 13) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
                         </div>
                         <div class="transaction-date">${formatDate(t.date)}${t.comment ? ` (${t.comment.length > 6 ? t.comment.substring(0, 6) + '...' : t.comment})` : ''}</div>
                     </div>
