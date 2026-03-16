@@ -485,11 +485,7 @@
             <!-- Balance Display -->
             <div class="header">
                 <div class="balance-display">
-                    <div style="position: relative;">
-                        <button onclick="toggleDDTracking()" id="ddBtn" style="position: absolute; top: -2px; left: 0; background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Débit différé tracking">💀</button>
-                        <div class="balance-label" id="balanceDateLabel" style="text-align: center;">My money</div>
-                        <button onclick="toggleStatistics()" id="statsBtn" style="position: absolute; top: -2px; right: 0; background: none; border: none; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'" title="Statistics">📊</button>
-                    </div>
+                    <div class="balance-label" id="balanceDateLabel" style="text-align: center;">My money</div>
                     <div class="balance-amount" id="myMoneyBalance" onclick="showMyMoneyExplanation()" style="cursor: pointer;">€0.00</div>
                     
                     <div class="balance-row">
@@ -503,6 +499,12 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
+                <button onclick="toggleDDTracking()" id="ddBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Real money evolution">💀</button>
+                <button onclick="toggleStatistics()" id="statsBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Statistics">📊</button>
             </div>
 
             <!-- Add Transaction Form -->
@@ -578,10 +580,10 @@
             <!-- Transaction List -->
             <div class="transaction-list" id="transactionListContainer">
                 <div class="list-header">
-                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
+                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 10px 12px;" onclick="toggleFutureTransactions()" id="futureToggleBtn">
                         Show future (<span id="futureCount">0</span>)
                     </button>
-                    <button class="btn btn-primary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleForm()">Add transaction</button>
+                    <button class="btn btn-primary" style="flex: none; font-size: 12px; padding: 10px 12px;" onclick="toggleForm()">Add transaction</button>
                 </div>
                 <div id="transactionsList">
                     <div class="empty-state">Loading from Google Sheets...</div>
@@ -592,7 +594,7 @@
             <div class="transaction-list hidden" id="statisticsContainer">
                 <div class="list-header">
                     <div class="list-title">Expense statistics</div>
-                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 8px 12px;" onclick="toggleStatsPeriod()" id="statsPeriodBtn">
+                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 10px 12px;" onclick="toggleStatsPeriod()" id="statsPeriodBtn">
                         This month
                     </button>
                 </div>
@@ -607,7 +609,10 @@
             <!-- DD Tracking View (hidden by default) -->
             <div class="transaction-list hidden" id="ddTrackingContainer">
                 <div class="list-header">
-                    <div class="list-title">💀 Real money evolution</div>
+                    <div class="list-title">Debt evolution</div>
+                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 10px 12px; visibility: hidden;">
+                        Placeholder
+                    </button>
                 </div>
                 <div style="padding: 0;">
                     <div style="position: relative; width: 100%; height: 0; padding-bottom: 100%;">
@@ -679,14 +684,12 @@
         function renderDDTracking() {
             // Get DD transactions grouped by month
             const ddByMonth = {};
-            const realMoneyByMonth = {};
             
             transactions.forEach(t => {
-                const date = new Date(t.date);
-                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                
-                // Track DD amounts
                 if (t.comment && t.comment.toUpperCase().includes('DD')) {
+                    const date = new Date(t.date);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    
                     if (!ddByMonth[monthKey]) {
                         ddByMonth[monthKey] = 0;
                     }
@@ -694,51 +697,9 @@
                 }
             });
             
-            // Calculate real money before salary for each month
+            // Sort by month and get last 6 months
             const sortedMonths = Object.keys(ddByMonth).sort().slice(-6);
-            
-            sortedMonths.forEach(monthKey => {
-                const [year, month] = monthKey.split('-');
-                const monthStart = new Date(year, month - 1, 1);
-                const monthEnd = new Date(year, month, 0);
-                
-                // Get all transactions before month end
-                let balance = 0;
-                let salaryInMonth = 0;
-                
-                transactions.forEach(t => {
-                    const tDate = new Date(t.date);
-                    if (tDate <= monthEnd && t.status === '✅') {
-                        balance += t.amount;
-                        // Track salary in this month
-                        if (tDate >= monthStart && tDate <= monthEnd && t.amount > 0) {
-                            salaryInMonth += t.amount;
-                        }
-                    }
-                });
-                
-                // Real money = balance - next month's DD - living - services
-                const nextMonthKey = getNextMonthKey(monthKey);
-                const nextMonthDD = ddByMonth[nextMonthKey] || 0;
-                
-                // Get living and services for next month
-                let nextMonthLiving = 0;
-                let nextMonthServices = 0;
-                
-                transactions.forEach(t => {
-                    const tDate = new Date(t.date);
-                    const tMonthKey = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
-                    if (tMonthKey === nextMonthKey) {
-                        const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                        if (category === 'Living') nextMonthLiving += t.amount;
-                        if (category === 'Services') nextMonthServices += t.amount;
-                    }
-                });
-                
-                realMoneyByMonth[monthKey] = balance + nextMonthDD + nextMonthLiving + nextMonthServices - salaryInMonth;
-            });
-            
-            const realMoneyAmounts = sortedMonths.map(m => realMoneyByMonth[m] || 0);
+            const amounts = sortedMonths.map(m => ddByMonth[m]);
             const labels = sortedMonths.map(m => {
                 const [year, month] = m.split('-');
                 const date = new Date(year, month - 1);
@@ -760,29 +721,28 @@
             
             ctx.clearRect(0, 0, width, height);
             
-            if (realMoneyAmounts.length === 0) {
+            if (amounts.length === 0) {
                 ctx.font = '16px sans-serif';
                 ctx.fillStyle = '#999';
                 ctx.textAlign = 'center';
-                ctx.fillText('No data available', width / 2, height / 2);
+                ctx.fillText('No Débit différé transactions found', width / 2, height / 2);
                 return;
             }
             
-            const padding = 60;
-            const chartWidth = width - padding * 2;
-            const chartHeight = height - padding * 2;
+            const paddingLeft = 60;
+            const paddingRight = 20;
+            const paddingTop = 20;
+            const paddingBottom = 50;
+            const chartWidth = width - paddingLeft - paddingRight;
+            const chartHeight = height - paddingTop - paddingBottom;
             
             // Find max and round UP to nearest 100
-            const rawMax = Math.max(...realMoneyAmounts.map(Math.abs));
+            const rawMax = Math.max(...amounts);
             const maxAmount = Math.ceil(rawMax / 100) * 100;
-            
-            // Find min (could be negative for real money)
-            const rawMin = Math.min(0, ...realMoneyAmounts);
-            const minAmount = Math.floor(rawMin / 100) * 100;
-            
+            const minAmount = 0;
             const range = maxAmount - minAmount;
             
-            // Determine step size (200 for ranges < 1000, 500 for larger)
+            // Determine step size
             let stepSize = 200;
             if (range > 2000) stepSize = 500;
             if (range > 5000) stepSize = 1000;
@@ -791,79 +751,222 @@
             ctx.strokeStyle = '#e0e0e0';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(padding, padding);
-            ctx.lineTo(padding, height - padding);
-            ctx.lineTo(width - padding, height - padding);
+            ctx.moveTo(paddingLeft, paddingTop);
+            ctx.lineTo(paddingLeft, height - paddingBottom);
+            ctx.lineTo(width - paddingRight, height - paddingBottom);
             ctx.stroke();
             
             // Draw grid lines and Y labels
             for (let value = minAmount; value <= maxAmount; value += stepSize) {
-                const y = height - padding - ((value - minAmount) / range) * chartHeight;
+                const y = height - paddingBottom - ((value - minAmount) / range) * chartHeight;
                 
                 ctx.strokeStyle = '#f0f0f0';
                 ctx.beginPath();
-                ctx.moveTo(padding, y);
-                ctx.lineTo(width - padding, y);
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(width - paddingRight, y);
                 ctx.stroke();
                 
                 ctx.fillStyle = '#999';
                 ctx.font = '12px sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText('€' + value.toFixed(0), padding - 10, y + 4);
+                ctx.fillText('€' + value.toFixed(0), paddingLeft - 10, y + 4);
             }
             
             // Helper function to calculate Y position
             const getY = (value) => {
-                return height - padding - ((value - minAmount) / range) * chartHeight;
+                return height - paddingBottom - ((value - minAmount) / range) * chartHeight;
             };
             
-            // Draw Real Money line (solid, green/red based on value)
-            ctx.lineWidth = 3;
+            // Find min and max for color mapping
+            const minDD = Math.min(...amounts);
+            const maxDD = Math.max(...amounts);
+            
+            // Helper function to get color based on value
+            const getColor = (value, alpha = 1) => {
+                const normalized = (value - minDD) / (maxDD - minDD);
+                // Blue (low) to Red (high)
+                const r = Math.round(52 + normalized * (231 - 52));   // 52 -> 231
+                const g = Math.round(152 - normalized * (152 - 76));  // 152 -> 76
+                const b = Math.round(219 - normalized * (219 - 60));  // 219 -> 60
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
+            
+            // Draw filled area under curve with gradient
+            const gradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
+            gradient.addColorStop(0, getColor(minDD, 0.2)); // Low value at bottom
+            gradient.addColorStop(1, getColor(maxDD, 0.4)); // High value at top
+            
+            ctx.fillStyle = gradient;
             ctx.beginPath();
             
-            const realMoneyPoints = [];
-            for (let i = 0; i < realMoneyAmounts.length; i++) {
-                const x = padding + (chartWidth / (realMoneyAmounts.length - 1)) * i;
-                const y = getY(realMoneyAmounts[i]);
-                realMoneyPoints.push({ x, y, value: realMoneyAmounts[i] });
+            const ddPoints = [];
+            for (let i = 0; i < amounts.length; i++) {
+                const x = paddingLeft + (chartWidth / (amounts.length - 1)) * i;
+                const y = getY(amounts[i]);
+                ddPoints.push({ x, y, value: amounts[i] });
+            }
+            
+            // Helper function to draw smooth curve through all points
+            const drawSmoothCurve = (points, close = false) => {
+                if (points.length < 2) return;
                 
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
+                ctx.moveTo(points[0].x, points[0].y);
+                
+                if (points.length === 2) {
+                    ctx.lineTo(points[1].x, points[1].y);
+                    return;
+                }
+                
+                // Use cardinal spline for smooth curve through all points
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p0 = points[Math.max(0, i - 1)];
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const p3 = points[Math.min(points.length - 1, i + 2)];
+                    
+                    const tension = 0.5;
+                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
+                    
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                }
+            };
+            
+            // Start from bottom left
+            ctx.moveTo(ddPoints[0].x, height - paddingBottom);
+            ctx.lineTo(ddPoints[0].x, ddPoints[0].y);
+            
+            // Draw smooth curve through all points
+            if (ddPoints.length === 2) {
+                ctx.lineTo(ddPoints[1].x, ddPoints[1].y);
+            } else {
+                for (let i = 0; i < ddPoints.length - 1; i++) {
+                    const p0 = ddPoints[Math.max(0, i - 1)];
+                    const p1 = ddPoints[i];
+                    const p2 = ddPoints[i + 1];
+                    const p3 = ddPoints[Math.min(ddPoints.length - 1, i + 2)];
+                    
+                    const tension = 0.5;
+                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
+                    
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
                 }
             }
             
-            // Color based on overall trend
-            const avgValue = realMoneyAmounts.reduce((a, b) => a + b, 0) / realMoneyAmounts.length;
-            ctx.strokeStyle = avgValue >= 0 ? '#27ae60' : '#e74c3c';
+            // Close path to bottom
+            const lastPoint = ddPoints[ddPoints.length - 1];
+            ctx.lineTo(lastPoint.x, height - paddingBottom);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Draw smooth line on top with gradient
+            const lineGradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
+            lineGradient.addColorStop(0, getColor(minDD, 1)); // Low value
+            lineGradient.addColorStop(1, getColor(maxDD, 1)); // High value
+            
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = lineGradient;
+            ctx.beginPath();
+            
+            ctx.moveTo(ddPoints[0].x, ddPoints[0].y);
+            
+            if (ddPoints.length === 2) {
+                ctx.lineTo(ddPoints[1].x, ddPoints[1].y);
+            } else {
+                for (let i = 0; i < ddPoints.length - 1; i++) {
+                    const p0 = ddPoints[Math.max(0, i - 1)];
+                    const p1 = ddPoints[i];
+                    const p2 = ddPoints[i + 1];
+                    const p3 = ddPoints[Math.min(ddPoints.length - 1, i + 2)];
+                    
+                    const tension = 0.5;
+                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
+                    
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                }
+            }
+            
             ctx.stroke();
             
-            // Draw Real Money points and labels
-            realMoneyPoints.forEach((point, i) => {
-                // Point
-                ctx.fillStyle = point.value >= 0 ? '#27ae60' : '#e74c3c';
+            // Draw DD points (interactive) - colored by value
+            ddPoints.forEach((point, i) => {
+                ctx.fillStyle = getColor(point.value, 1);
                 ctx.beginPath();
                 ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
                 ctx.fill();
-                
-                // Amount label
-                ctx.fillStyle = '#333';
-                ctx.font = 'bold 12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText('€' + point.value.toFixed(0), point.x, point.y - 15);
             });
             
             // Draw month labels
-            realMoneyPoints.forEach((point, i) => {
+            ddPoints.forEach((point, i) => {
                 ctx.fillStyle = '#666';
                 ctx.font = '12px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(labels[i], point.x, height - padding + 20);
+                ctx.fillText(labels[i], point.x, height - paddingBottom + 20);
+            });
+            
+            // Store points data for click handling
+            canvas.dataset.points = JSON.stringify(ddPoints.map((p, i) => ({
+                x: p.x,
+                y: p.y,
+                value: p.value,
+                label: '€' + p.value.toFixed(0)
+            })));
+            
+            // Add click handler
+            canvas.onclick = function(e) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const points = JSON.parse(canvas.dataset.points || '[]');
+                const selectedPoints = canvas.dataset.selected ? JSON.parse(canvas.dataset.selected) : [];
+                
+                // Check if clicked near a point
+                let clickedIndex = -1;
+                points.forEach((p, i) => {
+                    const distance = Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2);
+                    if (distance < 15) {
+                        clickedIndex = i;
+                    }
+                });
+                
+                if (clickedIndex >= 0) {
+                    // Toggle selection
+                    const idx = selectedPoints.indexOf(clickedIndex);
+                    if (idx >= 0) {
+                        selectedPoints.splice(idx, 1);
+                    } else {
+                        selectedPoints.push(clickedIndex);
+                    }
+                    canvas.dataset.selected = JSON.stringify(selectedPoints);
+                    
+                    // Redraw
+                    renderDDTracking();
+                }
+            };
+            
+            // Draw labels for selected points
+            const selectedPoints = canvas.dataset.selected ? JSON.parse(canvas.dataset.selected) : [];
+            const points = JSON.parse(canvas.dataset.points || '[]');
+            selectedPoints.forEach(idx => {
+                const point = points[idx];
+                if (point) {
+                    ctx.fillStyle = '#333';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(point.label, point.x, point.y - 15);
+                }
             });
         }
-        
-        function getNextMonthKey(monthKey) {
+
+                function getNextMonthKey(monthKey) {
             const [year, month] = monthKey.split('-');
             const nextDate = new Date(year, month, 1);
             return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
@@ -1728,7 +1831,7 @@
                 const categoryEmoji = categoryEmojis[t.category] || '❓';
                 
                 return `
-                <div class="transaction-item" style="${isFuture ? 'background: #f9f9f9; opacity: 0.8;' : ''}; display: flex; align-items: stretch;" onclick="editTransaction(${t.id})">
+                <div class="transaction-item" style="display: flex; align-items: stretch;" onclick="editTransaction(${t.id})">
                     <div style="font-size: 24px; line-height: 1; margin-right: 8px; display: flex; align-items: center;">${categoryEmoji}</div>
                     <div class="transaction-info" style="flex: 1;">
                         <div class="transaction-event">
