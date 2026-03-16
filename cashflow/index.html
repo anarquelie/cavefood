@@ -1831,21 +1831,22 @@
                 transactionDate.setHours(0, 0, 0, 0);
                 const isFuture = transactionDate > today;
                 const categoryEmoji = categoryEmojis[t.category] || '❓';
+                const greyStyle = isFuture ? 'color: #999 !important;' : '';
                 
                 return `
-                <div class="transaction-item" style="display: flex; align-items: stretch;" onclick="editTransaction(${t.id})">
-                    <div style="font-size: 24px; line-height: 1; margin-right: 8px; display: flex; align-items: center;">${categoryEmoji}</div>
+                <div class="transaction-item" style="display: flex; align-items: stretch; ${isFuture ? 'font-weight: bold;' : ''}" onclick="editTransaction(${t.id})">
+                    <div style="font-size: 24px; line-height: 1; margin-right: 8px; display: flex; align-items: center; ${greyStyle}">${categoryEmoji}</div>
                     <div class="transaction-info" style="flex: 1;">
-                        <div class="transaction-event">
+                        <div class="transaction-event" style="${greyStyle}">
                             ${t.event.length > 13 ? t.event.substring(0, 13) + '...' : t.event}<sup style="display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: ${t.status === '✅' ? '#27ae60' : '#f39c12'}; margin-left: 2px;"></sup>
                         </div>
-                        <div class="transaction-date">${formatDate(t.date)}${t.comment ? ` (${t.comment.length > 6 ? t.comment.substring(0, 6) + '...' : t.comment})` : ''}</div>
+                        <div class="transaction-date" style="${greyStyle}">${formatDate(t.date)}${t.comment ? ` (${t.comment.length > 6 ? t.comment.substring(0, 6) + '...' : t.comment})` : ''}</div>
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}">
                             ${t.amount >= 0 ? '' : ''}€${Math.abs(t.amount).toFixed(2)}
                         </div>
-                        <div class="transaction-balance">€${t.balance.toFixed(2)}</div>
+                        <div class="transaction-balance" style="${greyStyle}">€${t.balance.toFixed(2)}</div>
                     </div>
                 </div>
             `}).join('');
