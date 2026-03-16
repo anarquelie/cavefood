@@ -610,8 +610,8 @@
             <div class="transaction-list hidden" id="ddTrackingContainer">
                 <div class="list-header">
                     <div class="list-title">Debt evolution</div>
-                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 10px 12px; visibility: hidden;">
-                        Placeholder
+                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 10px 12px;" onclick="toggleMoneyView()" id="moneyViewBtn">
+                        My money
                     </button>
                 </div>
                 <div style="padding: 0;">
@@ -631,8 +631,25 @@
         let editingTransactionId = null;
         let showingStatistics = false;
         let showingDDTracking = false;
+        let showingMyMoney = false;
         let chartInstance = null;
         let statsPeriod = 'thisMonth';
+
+        function toggleMoneyView() {
+            showingMyMoney = !showingMyMoney;
+            const btn = document.getElementById('moneyViewBtn');
+            const title = document.querySelector('#ddTrackingContainer .list-title');
+            
+            if (showingMyMoney) {
+                btn.textContent = 'Debt';
+                title.textContent = 'Real money evolution';
+            } else {
+                btn.textContent = 'My money';
+                title.textContent = 'Debt evolution';
+            }
+            
+            renderDDTracking();
+        }
 
         function toggleDDTracking() {
             showingDDTracking = !showingDDTracking;
@@ -682,8 +699,12 @@
         }
 
         function renderDDTracking() {
+            // Determine which data to show
+            const dataType = showingMyMoney ? 'myMoney' : 'dd';
+            
             // Get DD transactions grouped by month
             const ddByMonth = {};
+            const realMoneyByMonth = {};
             
             transactions.forEach(t => {
                 if (t.comment && t.comment.toUpperCase().includes('DD')) {
@@ -697,9 +718,52 @@
                 }
             });
             
-            // Sort by month and get last 6 months
+            // Calculate Real Money for each month
             const sortedMonths = Object.keys(ddByMonth).sort().slice(-6);
-            const amounts = sortedMonths.map(m => ddByMonth[m]);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            sortedMonths.forEach(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const monthStart = new Date(year, month - 1, 1);
+                const monthEnd = new Date(year, month, 0);
+                
+                const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                const cutoffDate = (monthKey === currentMonth) ? today : monthEnd;
+                
+                let balance = 0;
+                let salaryInMonth = 0;
+                
+                transactions.forEach(t => {
+                    const tDate = new Date(t.date);
+                    if (tDate <= cutoffDate && t.status === '✅') {
+                        balance += t.amount;
+                        if (tDate >= monthStart && tDate <= cutoffDate && t.amount > 0) {
+                            salaryInMonth += t.amount;
+                        }
+                    }
+                });
+                
+                const nextMonthKey = getNextMonthKey(monthKey);
+                const nextMonthDD = ddByMonth[nextMonthKey] || 0;
+                
+                let nextMonthLiving = 0;
+                let nextMonthServices = 0;
+                
+                transactions.forEach(t => {
+                    const tDate = new Date(t.date);
+                    const tMonthKey = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
+                    if (tMonthKey === nextMonthKey) {
+                        const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
+                        if (category === 'Living') nextMonthLiving += t.amount;
+                        if (category === 'Services') nextMonthServices += t.amount;
+                    }
+                });
+                
+                realMoneyByMonth[monthKey] = balance + nextMonthDD + nextMonthLiving + nextMonthServices - salaryInMonth;
+            });
+            
+            const amounts = showingMyMoney ? sortedMonths.map(m => realMoneyByMonth[m] || 0) : sortedMonths.map(m => ddByMonth[m]);
             const labels = sortedMonths.map(m => {
                 const [year, month] = m.split('-');
                 const date = new Date(year, month - 1);
@@ -725,7 +789,7 @@
                 ctx.font = '16px sans-serif';
                 ctx.fillStyle = '#999';
                 ctx.textAlign = 'center';
-                ctx.fillText('No Débit différé transactions found', width / 2, height / 2);
+                ctx.fillText('No data available', width / 2, height / 2);
                 return;
             }
             
@@ -736,10 +800,11 @@
             const chartWidth = width - paddingLeft - paddingRight;
             const chartHeight = height - paddingTop - paddingBottom;
             
-            // Find max and round UP to nearest 100
-            const rawMax = Math.max(...amounts);
+            // Find max and min (My Money can be negative)
+            const rawMax = Math.max(...amounts.map(Math.abs));
             const maxAmount = Math.ceil(rawMax / 100) * 100;
-            const minAmount = 0;
+            const rawMin = showingMyMoney ? Math.min(0, ...amounts) : 0;
+            const minAmount = Math.floor(rawMin / 100) * 100;
             const range = maxAmount - minAmount;
             
             // Determine step size
@@ -778,23 +843,34 @@
             };
             
             // Find min and max for color mapping
-            const minDD = Math.min(...amounts);
-            const maxDD = Math.max(...amounts);
+            const minVal = Math.min(...amounts);
+            const maxVal = Math.max(...amounts);
             
             // Helper function to get color based on value
             const getColor = (value, alpha = 1) => {
-                const normalized = (value - minDD) / (maxDD - minDD);
-                // Blue (low) to Red (high)
-                const r = Math.round(52 + normalized * (231 - 52));   // 52 -> 231
-                const g = Math.round(152 - normalized * (152 - 76));  // 152 -> 76
-                const b = Math.round(219 - normalized * (219 - 60));  // 219 -> 60
-                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                if (showingMyMoney) {
+                    // Green for positive, red for negative
+                    return value >= 0 ? `rgba(39, 174, 96, ${alpha})` : `rgba(231, 76, 60, ${alpha})`;
+                } else {
+                    // Blue (low) to Red (high) for DD
+                    const normalized = (value - minVal) / (maxVal - minVal);
+                    const r = Math.round(52 + normalized * (231 - 52));
+                    const g = Math.round(152 - normalized * (152 - 76));
+                    const b = Math.round(219 - normalized * (219 - 60));
+                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                }
             };
             
             // Draw filled area under curve with gradient
             const gradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
-            gradient.addColorStop(0, getColor(minDD, 0.2)); // Low value at bottom
-            gradient.addColorStop(1, getColor(maxDD, 0.4)); // High value at top
+            if (showingMyMoney) {
+                gradient.addColorStop(0, 'rgba(231, 76, 60, 0.2)');
+                gradient.addColorStop(0.5, 'rgba(39, 174, 96, 0.2)');
+                gradient.addColorStop(1, 'rgba(39, 174, 96, 0.4)');
+            } else {
+                gradient.addColorStop(0, getColor(minVal, 0.2));
+                gradient.addColorStop(1, getColor(maxVal, 0.4));
+            }
             
             ctx.fillStyle = gradient;
             ctx.beginPath();
@@ -805,34 +881,6 @@
                 const y = getY(amounts[i]);
                 ddPoints.push({ x, y, value: amounts[i] });
             }
-            
-            // Helper function to draw smooth curve through all points
-            const drawSmoothCurve = (points, close = false) => {
-                if (points.length < 2) return;
-                
-                ctx.moveTo(points[0].x, points[0].y);
-                
-                if (points.length === 2) {
-                    ctx.lineTo(points[1].x, points[1].y);
-                    return;
-                }
-                
-                // Use cardinal spline for smooth curve through all points
-                for (let i = 0; i < points.length - 1; i++) {
-                    const p0 = points[Math.max(0, i - 1)];
-                    const p1 = points[i];
-                    const p2 = points[i + 1];
-                    const p3 = points[Math.min(points.length - 1, i + 2)];
-                    
-                    const tension = 0.5;
-                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
-                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
-                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
-                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
-                    
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-                }
-            };
             
             // Start from bottom left
             ctx.moveTo(ddPoints[0].x, height - paddingBottom);
@@ -866,8 +914,14 @@
             
             // Draw smooth line on top with gradient
             const lineGradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
-            lineGradient.addColorStop(0, getColor(minDD, 1)); // Low value
-            lineGradient.addColorStop(1, getColor(maxDD, 1)); // High value
+            if (showingMyMoney) {
+                lineGradient.addColorStop(0, 'rgba(231, 76, 60, 1)');
+                lineGradient.addColorStop(0.5, 'rgba(39, 174, 96, 1)');
+                lineGradient.addColorStop(1, 'rgba(39, 174, 96, 1)');
+            } else {
+                lineGradient.addColorStop(0, getColor(minVal, 1));
+                lineGradient.addColorStop(1, getColor(maxVal, 1));
+            }
             
             ctx.lineWidth = 3;
             ctx.strokeStyle = lineGradient;
@@ -912,58 +966,6 @@
                 ctx.fillText(labels[i], point.x, height - paddingBottom + 20);
             });
             
-            // Store points data for click handling
-            canvas.dataset.points = JSON.stringify(ddPoints.map((p, i) => ({
-                x: p.x,
-                y: p.y,
-                value: p.value,
-                label: '€' + p.value.toFixed(0)
-            })));
-            
-            // Add click handler
-            canvas.onclick = function(e) {
-                const rect = canvas.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                const points = JSON.parse(canvas.dataset.points || '[]');
-                const selectedPoints = canvas.dataset.selected ? JSON.parse(canvas.dataset.selected) : [];
-                
-                // Check if clicked near a point
-                let clickedIndex = -1;
-                points.forEach((p, i) => {
-                    const distance = Math.sqrt((x - p.x) ** 2 + (y - p.y) ** 2);
-                    if (distance < 15) {
-                        clickedIndex = i;
-                    }
-                });
-                
-                if (clickedIndex >= 0) {
-                    // Toggle selection
-                    const idx = selectedPoints.indexOf(clickedIndex);
-                    if (idx >= 0) {
-                        selectedPoints.splice(idx, 1);
-                    } else {
-                        selectedPoints.push(clickedIndex);
-                    }
-                    canvas.dataset.selected = JSON.stringify(selectedPoints);
-                    
-                    // Redraw
-                    renderDDTracking();
-                }
-            };
-            
-            // Draw labels for selected points
-            const selectedPoints = canvas.dataset.selected ? JSON.parse(canvas.dataset.selected) : [];
-            const points = JSON.parse(canvas.dataset.points || '[]');
-            selectedPoints.forEach(idx => {
-                const point = points[idx];
-                if (point) {
-                    ctx.fillStyle = '#333';
-                    ctx.font = 'bold 12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(point.label, point.x, point.y - 15);
-                }
-            });
         }
 
                 function getNextMonthKey(monthKey) {
