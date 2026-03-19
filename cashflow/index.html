@@ -511,66 +511,71 @@
             <div class="form-card hidden" id="transactionForm">
                 <div class="form-title">New transaction</div>
                 <form id="addForm" onsubmit="addTransaction(event)">
-                    <div class="form-group">
-                        <label>Date</label>
-                        <input type="date" id="dateInput" required>
-                    </div>
-                    
+                    <!-- Row 1: Event name (full width) -->
                     <div class="form-group">
                         <label>Event <span class="required">*</span></label>
-                        <input type="text" id="eventInput" placeholder="e.g., Groceries, Salary..." required>
+                        <input type="text" id="eventInput" placeholder="e.g., Groceries, Salary..." required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     
-                    <div class="form-group">
-                        <label>Type</label>
-                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                            <button type="button" class="btn btn-secondary" id="expenseBtn" onclick="setTransactionType('expense')" style="flex: 1; border: 2px solid #e74c3c; background: white; color: #e74c3c; font-weight: 600;">
-                                − Expense
-                            </button>
-                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1; border: 2px solid #27ae60; background: white; color: #27ae60; font-weight: 600;">
-                                + Income
-                            </button>
+                    <!-- Row 2: Amount and Date side by side -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label>Amount <span class="required">*</span></label>
+                            <input type="text" id="amountInput" placeholder="50 or +50" required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
+                        </div>
+                        
+                        <div class="form-group" style="margin: 0;">
+                            <label>Date</label>
+                            <input type="date" id="dateInput" required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
                         </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label>Amount (€) <span class="required">*</span></label>
-                        <div class="amount-input-group">
-                            <input type="number" id="amountInput" step="0.01" placeholder="0.00" required>
-                            <span class="currency-symbol">€</span>
+                    <!-- Row 4: Status and Category side by side -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label>Status</label>
+                            <select id="statusInput" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                                <option value="✅">✅ Completed</option>
+                                <option value="⏳">⏳ Expected</option>
+                            </select>
                         </div>
-                        <small style="color: #999; font-size: 12px;" id="amountHint">Expense (will be negative)</small>
+                        
+                        <div class="form-group" style="margin: 0;">
+                            <label>Category</label>
+                            <select id="categoryInput" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                                <option value="auto">Auto-detect</option>
+                                <option value="Living">🏠 Living</option>
+                                <option value="Food">🥕 Food</option>
+                                <option value="Services">💳 Services</option>
+                                <option value="Social">🍻 Social</option>
+                                <option value="Well-being">💆 Well-being</option>
+                                <option value="Pets">🐹 Pets</option>
+                                <option value="Other">🧾 Other</option>
+                            </select>
+                        </div>
                     </div>
                     
+                    <!-- Row 5: Comment and Multiple dates (collapsible) -->
                     <div class="form-group">
-                        <label>Status</label>
-                        <select id="statusInput">
-                            <option value="✅">✅ Completed</option>
-                            <option value="⏳">⏳ Expected</option>
-                        </select>
+                        <details style="margin-top: 10px;">
+                            <summary style="cursor: pointer; color: #666; font-size: 14px; user-select: none;">
+                                Add comment or multiple dates
+                            </summary>
+                            <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                                <label style="font-size: 13px; color: #666;">Comment</label>
+                                <textarea id="commentInput" placeholder="Optional notes..." style="padding: 8px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></textarea>
+                                
+                                <label style="font-size: 13px; color: #666;">Multiple dates</label>
+                                <button type="button" class="btn btn-secondary" onclick="openMultiDateSelector()" style="width: 100%; padding: 10px; margin-top: 5px;">
+                                    📅 Select Multiple Dates
+                                </button>
+                                <div id="selectedDatesDisplay" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+                            </div>
+                        </details>
                     </div>
                     
-                    <div class="form-group">
-                        <label>Category</label>
-                        <select id="categoryInput">
-                            <option value="auto">Auto-detect</option>
-                            <option value="Living">🏠 Living</option>
-                            <option value="Food">🥕 Food</option>
-                            <option value="Services">💳 Services</option>
-                            <option value="Social">🍻 Social</option>
-                            <option value="Well-being">💆 Well-being</option>
-                            <option value="Pets">🐹 Pets</option>
-                            <option value="Other">🧾 Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Comment</label>
-                        <textarea id="commentInput" placeholder="Optional notes..."></textarea>
-                    </div>
-                    
-                    <div class="controls">
-                        <button type="submit" class="btn btn-primary" id="saveBtn">Save to Google Sheet</button>
+                    <div class="controls" style="margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
                         <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
                         <button type="button" class="btn btn-danger hidden" id="deleteBtn" onclick="deleteTransaction()">🗑️ Delete</button>
                     </div>
@@ -621,14 +626,33 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Multi-Date Selector Modal -->
+        <div id="multiDateModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+            <div style="background: white; border-radius: 15px; padding: 20px; max-width: 400px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="margin: 0; font-size: 18px;">Select Multiple Dates</h3>
+                    <button onclick="closeMultiDateSelector()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="date" id="multiDatePicker" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                    <button type="button" class="btn btn-primary" onclick="addDateToSelection()" style="width: 100%; margin-top: 8px;">Add Date</button>
+                </div>
+                <div id="selectedDatesList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeMultiDateSelector()" style="flex: 1;">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="applyMultipleDates()" style="flex: 1;">Apply</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         let scriptUrl = null;
         let transactions = [];
         let showFuture = false;
-        let transactionType = 'expense';
         let editingTransactionId = null;
+        let selectedMultipleDates = [];
         let showingStatistics = false;
         let showingDDTracking = false;
         let showingMyMoney = false;
@@ -1319,30 +1343,6 @@
             `;
         }
 
-        function setTransactionType(type) {
-            transactionType = type;
-            const expenseBtn = document.getElementById('expenseBtn');
-            const incomeBtn = document.getElementById('incomeBtn');
-            const hint = document.getElementById('amountHint');
-            
-            if (type === 'expense') {
-                expenseBtn.style.background = 'white';
-                expenseBtn.style.color = '#e74c3c';
-                expenseBtn.style.border = '2px solid #e74c3c';
-                incomeBtn.style.background = 'white';
-                incomeBtn.style.color = '#27ae60';
-                incomeBtn.style.border = '2px solid #27ae60';
-                hint.textContent = 'Expense (will be negative)';
-            } else {
-                incomeBtn.style.background = 'white';
-                incomeBtn.style.color = '#27ae60';
-                incomeBtn.style.border = '2px solid #27ae60';
-                expenseBtn.style.background = 'white';
-                expenseBtn.style.color = '#e74c3c';
-                expenseBtn.style.border = '2px solid #e74c3c';
-                hint.textContent = 'Income (will be positive)';
-            }
-        }
 
         function init() {
             const savedScriptUrl = localStorage.getItem('scriptUrl');
@@ -1545,10 +1545,11 @@
             
             document.getElementById('categoryInput').value = transaction.category || 'auto';
             
-            if (transaction.amount < 0) {
-                setTransactionType('expense');
+            // Set amount with appropriate sign
+            if (transaction.amount >= 0) {
+                document.getElementById('amountInput').value = '+' + transaction.amount;
             } else {
-                setTransactionType('income');
+                document.getElementById('amountInput').value = Math.abs(transaction.amount);
             }
             
             editingTransactionId = transactionId;
@@ -1577,17 +1578,106 @@
             }
         }
 
+        function openMultiDateSelector() {
+            const modal = document.getElementById('multiDateModal');
+            modal.style.display = 'flex';
+            
+            // Set default date to current date input value
+            const currentDate = document.getElementById('dateInput').value;
+            if (currentDate) {
+                document.getElementById('multiDatePicker').value = currentDate;
+            }
+            
+            updateSelectedDatesList();
+        }
+
+        function closeMultiDateSelector() {
+            document.getElementById('multiDateModal').style.display = 'none';
+        }
+
+        function addDateToSelection() {
+            const datePicker = document.getElementById('multiDatePicker');
+            const date = datePicker.value;
+            
+            if (date && !selectedMultipleDates.includes(date)) {
+                selectedMultipleDates.push(date);
+                selectedMultipleDates.sort();
+                updateSelectedDatesList();
+            }
+        }
+
+        function removeDateFromSelection(date) {
+            selectedMultipleDates = selectedMultipleDates.filter(d => d !== date);
+            updateSelectedDatesList();
+        }
+
+        function updateSelectedDatesList() {
+            const list = document.getElementById('selectedDatesList');
+            
+            if (selectedMultipleDates.length === 0) {
+                list.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">No dates selected</div>';
+                return;
+            }
+            
+            list.innerHTML = selectedMultipleDates.map(date => {
+                const dateObj = new Date(date + 'T00:00:00');
+                const formatted = dateObj.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f5f5f5; border-radius: 8px; margin-bottom: 8px;">
+                        <span style="font-size: 14px;">${formatted}</span>
+                        <button type="button" onclick="removeDateFromSelection('${date}')" style="background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 18px; padding: 0 4px;">&times;</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function applyMultipleDates() {
+            if (selectedMultipleDates.length === 0) {
+                alert('Please select at least one date');
+                return;
+            }
+            
+            // Update the display
+            const display = document.getElementById('selectedDatesDisplay');
+            display.textContent = `${selectedMultipleDates.length} dates selected`;
+            display.style.color = '#27ae60';
+            display.style.fontWeight = '600';
+            
+            // Disable the single date input
+            document.getElementById('dateInput').disabled = true;
+            document.getElementById('dateInput').style.opacity = '0.5';
+            
+            closeMultiDateSelector();
+        }
+
+        function clearMultipleDates() {
+            selectedMultipleDates = [];
+            document.getElementById('selectedDatesDisplay').textContent = '';
+            document.getElementById('dateInput').disabled = false;
+            document.getElementById('dateInput').style.opacity = '1';
+        }
+
         async function addTransaction(event) {
             event.preventDefault();
             
             const date = document.getElementById('dateInput').value;
             const eventName = document.getElementById('eventInput').value;
-            let amount = parseFloat(document.getElementById('amountInput').value);
+            const amountStr = document.getElementById('amountInput').value.trim();
             
-            if (transactionType === 'expense' && amount > 0) {
-                amount = -amount;
-            } else if (transactionType === 'income' && amount < 0) {
-                amount = Math.abs(amount);
+            // Parse amount with sign detection
+            let amount;
+            if (amountStr.startsWith('+')) {
+                // Explicit income with + sign
+                amount = Math.abs(parseFloat(amountStr));
+            } else {
+                // Default to expense (negative)
+                amount = -Math.abs(parseFloat(amountStr));
             }
             
             const status = document.getElementById('statusInput').value;
@@ -1595,6 +1685,7 @@
             const selectedCategory = document.getElementById('categoryInput').value;
 
             if (editingTransactionId !== null) {
+                // Edit existing transaction (no multiple dates for editing)
                 const index = transactions.findIndex(t => t.id === editingTransactionId);
                 if (index !== -1) {
                     transactions[index] = {
@@ -1609,16 +1700,22 @@
                 }
                 editingTransactionId = null;
             } else {
-                const transaction = {
-                    id: Date.now(),
-                    date: date,
-                    event: eventName,
-                    amount: amount,
-                    status: status,
-                    comment: comment,
-                    category: selectedCategory !== 'auto' ? selectedCategory : ''
-                };
-                transactions.push(transaction);
+                // Determine which dates to use
+                const datesToUse = selectedMultipleDates.length > 0 ? selectedMultipleDates : [date];
+                
+                // Create transaction for each selected date
+                datesToUse.forEach(transDate => {
+                    const transaction = {
+                        id: Date.now() + Math.random(), // Ensure unique IDs
+                        date: transDate,
+                        event: eventName,
+                        amount: amount,
+                        status: status,
+                        comment: comment,
+                        category: selectedCategory !== 'auto' ? selectedCategory : ''
+                    };
+                    transactions.push(transaction);
+                });
             }
 
             renderTransactions();
@@ -1629,10 +1726,10 @@
             document.getElementById('addForm').reset();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
-            setTransactionType('expense');
             document.querySelector('.form-title').textContent = 'New transaction';
-            document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
+            document.getElementById('saveBtn').textContent = 'Save';
             document.getElementById('categoryInput').value = 'auto';
+            clearMultipleDates(); // Clear multiple dates selection
             toggleForm();
         }
 
