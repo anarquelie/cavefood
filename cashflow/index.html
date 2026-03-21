@@ -490,7 +490,7 @@
                     
                     <div class="balance-row">
                         <div class="balance-item" onclick="showAvailableExplanation()" style="cursor: pointer;">
-                            <div class="balance-item-label">Available in account</div>
+                            <div class="balance-item-label">Available in account(s)</div>
                             <div class="balance-item-value" id="availableAmount">€0.00</div>
                         </div>
                         <div class="balance-item" onclick="showNextMonthExplanation()" style="cursor: pointer;">
@@ -503,8 +503,22 @@
 
             <!-- Navigation Buttons -->
             <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
-                <button onclick="toggleDDTracking()" id="ddBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Real money evolution">💀</button>
-                <button onclick="toggleStatistics()" id="statsBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Statistics">📊</button>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                    <button onclick="showCashflow()" id="cashflowBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Trends">📈</button>
+                    <span style="font-size: 11px; color: #ccc;">Trends</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                    <button onclick="showDebt()" id="debtBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Debt evolution">💀</button>
+                    <span style="font-size: 11px; color: #ccc;">Debt</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                    <button onclick="showRealMoney()" id="realMoneyBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Real money evolution">💰</button>
+                    <span style="font-size: 11px; color: #ccc;">Real money</span>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                    <button onclick="toggleStatistics()" id="statsBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Expenses">📊</button>
+                    <span style="font-size: 11px; color: #ccc;">Expenses</span>
+                </div>
             </div>
 
             <!-- Add Transaction Form -->
@@ -521,7 +535,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div class="form-group" style="margin: 0;">
                             <label>Amount <span class="required">*</span></label>
-                            <input type="text" id="amountInput" placeholder="50 or +50" required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
+                            <input type="number" id="amountInput" placeholder="50 or +50" required step="0.01" inputmode="decimal" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
                         </div>
                         
                         <div class="form-group" style="margin: 0;">
@@ -614,17 +628,17 @@
             <!-- DD Tracking View (hidden by default) -->
             <div class="transaction-list hidden" id="ddTrackingContainer">
                 <div class="list-header">
-                    <div class="list-title">Debt evolution</div>
-                    <button class="btn btn-secondary" style="flex: none; font-size: 12px; padding: 10px 12px;" onclick="toggleMoneyView()" id="moneyViewBtn">
-                        My money
-                    </button>
+                    <div class="list-title" id="ddTitle">Chart</div>
                 </div>
                 <div style="padding: 0;">
                     <div style="position: relative; width: 100%; height: 0; padding-bottom: 100%;">
                         <canvas id="ddChart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
+                        <canvas id="incomeSpendingChart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></canvas>
                     </div>
                 </div>
             </div>
+
+            <!-- Income vs Spending View removed - now part of DD tracking -->
         </div>
         
         <!-- Multi-Date Selector Modal -->
@@ -655,51 +669,114 @@
         let selectedMultipleDates = [];
         let showingStatistics = false;
         let showingDDTracking = false;
+        let showingIncomeSpending = false;
+        let moneyViewMode = 'incomeSpending'; // 'debt', 'realMoney', 'incomeSpending' - start with Cashflow
         let showingMyMoney = false;
         let chartInstance = null;
         let statsPeriod = 'thisMonth';
 
-        function toggleMoneyView() {
-            showingMyMoney = !showingMyMoney;
-            const btn = document.getElementById('moneyViewBtn');
-            const title = document.querySelector('#ddTrackingContainer .list-title');
+        function showCashflow() {
+            const listContainer = document.getElementById('transactionListContainer');
+            const statsContainer = document.getElementById('statisticsContainer');
+            const ddContainer = document.getElementById('ddTrackingContainer');
+            const title = document.getElementById('ddTitle');
+            const ddCanvas = document.getElementById('ddChart');
+            const incomeSpendingCanvas = document.getElementById('incomeSpendingChart');
+            const cashflowBtn = document.getElementById('cashflowBtn');
+            const debtBtn = document.getElementById('debtBtn');
+            const realMoneyBtn = document.getElementById('realMoneyBtn');
+            const statsBtn = document.getElementById('statsBtn');
             
-            if (showingMyMoney) {
-                btn.textContent = 'Debt';
-                title.textContent = 'Real money evolution';
-            } else {
-                btn.textContent = 'My money';
-                title.textContent = 'Debt evolution';
-            }
+            listContainer.classList.add('hidden');
+            statsContainer.classList.add('hidden');
+            ddContainer.classList.remove('hidden');
+            
+            title.textContent = 'Trends';
+            ddCanvas.style.display = 'none';
+            incomeSpendingCanvas.style.display = 'block';
+            
+            // Update button states
+            cashflowBtn.textContent = '🏠';
+            debtBtn.textContent = '💀';
+            realMoneyBtn.textContent = '💰';
+            statsBtn.textContent = '📊';
+            
+            showingDDTracking = true;
+            showingStatistics = false;
+            moneyViewMode = 'incomeSpending';
+            showingMyMoney = false;
+            
+            renderIncomeSpending();
+        }
+
+        function showDebt() {
+            const listContainer = document.getElementById('transactionListContainer');
+            const statsContainer = document.getElementById('statisticsContainer');
+            const ddContainer = document.getElementById('ddTrackingContainer');
+            const title = document.getElementById('ddTitle');
+            const ddCanvas = document.getElementById('ddChart');
+            const incomeSpendingCanvas = document.getElementById('incomeSpendingChart');
+            const cashflowBtn = document.getElementById('cashflowBtn');
+            const debtBtn = document.getElementById('debtBtn');
+            const realMoneyBtn = document.getElementById('realMoneyBtn');
+            const statsBtn = document.getElementById('statsBtn');
+            
+            listContainer.classList.add('hidden');
+            statsContainer.classList.add('hidden');
+            ddContainer.classList.remove('hidden');
+            
+            title.textContent = 'Debt evolution';
+            ddCanvas.style.display = 'block';
+            incomeSpendingCanvas.style.display = 'none';
+            
+            // Update button states
+            cashflowBtn.textContent = '📈';
+            debtBtn.textContent = '🏠';
+            realMoneyBtn.textContent = '💰';
+            statsBtn.textContent = '📊';
+            
+            showingDDTracking = true;
+            showingStatistics = false;
+            moneyViewMode = 'debt';
+            showingMyMoney = false;
             
             renderDDTracking();
         }
 
-        function toggleDDTracking() {
-            showingDDTracking = !showingDDTracking;
+        function showRealMoney() {
             const listContainer = document.getElementById('transactionListContainer');
             const statsContainer = document.getElementById('statisticsContainer');
             const ddContainer = document.getElementById('ddTrackingContainer');
+            const title = document.getElementById('ddTitle');
+            const ddCanvas = document.getElementById('ddChart');
+            const incomeSpendingCanvas = document.getElementById('incomeSpendingChart');
+            const cashflowBtn = document.getElementById('cashflowBtn');
+            const debtBtn = document.getElementById('debtBtn');
+            const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
-            const ddBtn = document.getElementById('ddBtn');
             
-            if (showingDDTracking) {
-                listContainer.classList.add('hidden');
-                statsContainer.classList.add('hidden');
-                ddContainer.classList.remove('hidden');
-                ddBtn.textContent = '🏠';
-                ddBtn.title = 'Home';
-                showingStatistics = false;
-                statsBtn.textContent = '📊';
-                statsBtn.title = 'Statistics';
-                renderDDTracking();
-            } else {
-                listContainer.classList.remove('hidden');
-                ddContainer.classList.add('hidden');
-                ddBtn.textContent = '💀';
-                ddBtn.title = 'Débit différé tracking';
-            }
+            listContainer.classList.add('hidden');
+            statsContainer.classList.add('hidden');
+            ddContainer.classList.remove('hidden');
+            
+            title.textContent = 'Real money evolution';
+            ddCanvas.style.display = 'block';
+            incomeSpendingCanvas.style.display = 'none';
+            
+            // Update button states
+            cashflowBtn.textContent = '📈';
+            debtBtn.textContent = '💀';
+            realMoneyBtn.textContent = '🏠';
+            statsBtn.textContent = '📊';
+            
+            showingDDTracking = true;
+            showingStatistics = false;
+            moneyViewMode = 'realMoney';
+            showingMyMoney = true;
+            
+            renderDDTracking();
         }
+
 
         function toggleStatsPeriod() {
             if (statsPeriod === 'thisMonth') {
@@ -888,9 +965,10 @@
             // Draw filled area under curve with gradient
             const gradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
             if (showingMyMoney) {
-                gradient.addColorStop(0, 'rgba(231, 76, 60, 0.2)');
-                gradient.addColorStop(0.5, 'rgba(39, 174, 96, 0.2)');
-                gradient.addColorStop(1, 'rgba(39, 174, 96, 0.4)');
+                // Purple (low/negative) to Teal (high/positive) gradient
+                gradient.addColorStop(0, 'rgba(155, 89, 182, 0.2)');   // Purple at bottom (low values)
+                gradient.addColorStop(0.5, 'rgba(52, 152, 219, 0.2)'); // Blue in middle
+                gradient.addColorStop(1, 'rgba(26, 188, 156, 0.4)');   // Teal at top (high values)
             } else {
                 gradient.addColorStop(0, getColor(minVal, 0.2));
                 gradient.addColorStop(1, getColor(maxVal, 0.4));
@@ -939,9 +1017,10 @@
             // Draw smooth line on top with gradient
             const lineGradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
             if (showingMyMoney) {
-                lineGradient.addColorStop(0, 'rgba(231, 76, 60, 1)');
-                lineGradient.addColorStop(0.5, 'rgba(39, 174, 96, 1)');
-                lineGradient.addColorStop(1, 'rgba(39, 174, 96, 1)');
+                // Purple (low/negative) to Teal (high/positive) gradient
+                lineGradient.addColorStop(0, 'rgba(155, 89, 182, 1)');   // Purple at bottom
+                lineGradient.addColorStop(0.5, 'rgba(52, 152, 219, 1)'); // Blue in middle
+                lineGradient.addColorStop(1, 'rgba(26, 188, 156, 1)');   // Teal at top
             } else {
                 lineGradient.addColorStop(0, getColor(minVal, 1));
                 lineGradient.addColorStop(1, getColor(maxVal, 1));
@@ -996,6 +1075,248 @@
             const [year, month] = monthKey.split('-');
             const nextDate = new Date(year, month, 1);
             return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function renderIncomeSpending() {
+            const canvas = document.getElementById('incomeSpendingChart');
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Get canvas container dimensions
+            const container = canvas.parentElement;
+            const size = container.offsetWidth;
+            
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            ctx.scale(dpr, dpr);
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Define the 6 months to display: Jan, Feb, Mar, Apr, May, Jun
+            const today = new Date();
+            const currentYear = today.getFullYear();
+            const monthsToShow = [
+                { year: currentYear, month: 0, name: 'Jan' },  // January
+                { year: currentYear, month: 1, name: 'Feb' },  // February
+                { year: currentYear, month: 2, name: 'Mar' },  // March
+                { year: currentYear, month: 3, name: 'Apr' },  // April
+                { year: currentYear, month: 4, name: 'May' },  // May
+                { year: currentYear, month: 5, name: 'Jun' }   // June
+            ];
+            
+            // Calculate data for each month - COUNT BOTH COMPLETED AND UNCOMPLETED
+            const monthlyData = monthsToShow.map(monthInfo => {
+                let income = 0;
+                let spending = 0;
+                
+                transactions.forEach(t => {
+                    // Count all transactions, not just completed ones
+                    const tDate = new Date(t.date);
+                    if (tDate.getMonth() === monthInfo.month && tDate.getFullYear() === monthInfo.year) {
+                        if (t.amount > 0) {
+                            income += t.amount;
+                        } else {
+                            spending += Math.abs(t.amount);
+                        }
+                    }
+                });
+                
+                return {
+                    month: monthInfo.name,
+                    income: income,
+                    spending: spending
+                };
+            });
+            
+            // Chart dimensions
+            const paddingLeft = 60;
+            const paddingRight = 20;
+            const paddingTop = 20;
+            const paddingBottom = 50;
+            
+            const chartWidth = size - paddingLeft - paddingRight;
+            const chartHeight = size - paddingTop - paddingBottom;
+            
+            // Find max value for scaling
+            const maxValue = Math.max(...monthlyData.map(d => Math.max(d.income, d.spending)), 100); // Minimum 100
+            let yMax = Math.ceil(maxValue / 100) * 100;
+            
+            // Determine Y-axis step
+            let yStep;
+            if (yMax <= 1000) {
+                yStep = 200;
+            } else if (yMax <= 2500) {
+                yStep = 500;
+            } else {
+                yStep = 1000;
+            }
+            yMax = Math.ceil(maxValue / yStep) * yStep;
+            
+            // Draw Y-axis grid lines and labels
+            const ySteps = yMax / yStep;
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            ctx.fillStyle = '#999';
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'right';
+            
+            for (let i = 0; i <= ySteps; i++) {
+                const y = paddingTop + chartHeight - (i / ySteps) * chartHeight;
+                const value = i * yStep;
+                
+                ctx.beginPath();
+                ctx.moveTo(paddingLeft, y);
+                ctx.lineTo(paddingLeft + chartWidth, y);
+                ctx.stroke();
+                
+                ctx.fillText('€' + value, paddingLeft - 10, y + 4);
+            }
+            
+            // Helper function for smooth curves (cardinal spline)
+            function drawSmoothCurve(points, tension = 0.5) {
+                if (points.length < 2) return;
+                
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p0 = points[Math.max(0, i - 1)];
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const p3 = points[Math.min(points.length - 1, i + 2)];
+                    
+                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
+                    
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                }
+            }
+            
+            // Prepare data points
+            const incomePoints = [];
+            const spendingPoints = [];
+            const xStep = chartWidth / (monthlyData.length - 1);
+            
+            monthlyData.forEach((data, index) => {
+                const x = paddingLeft + index * xStep;
+                const incomeY = paddingTop + chartHeight - (data.income / yMax) * chartHeight;
+                const spendingY = paddingTop + chartHeight - (data.spending / yMax) * chartHeight;
+                
+                incomePoints.push({ x, y: incomeY });
+                spendingPoints.push({ x, y: spendingY });
+            });
+            
+            // Draw income curve with gradient fill
+            const incomeGradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartHeight);
+            incomeGradient.addColorStop(0, 'rgba(39, 174, 96, 0.3)');
+            incomeGradient.addColorStop(1, 'rgba(39, 174, 96, 0.05)');
+            
+            ctx.save();
+            drawSmoothCurve(incomePoints);
+            ctx.lineTo(incomePoints[incomePoints.length - 1].x, paddingTop + chartHeight);
+            ctx.lineTo(incomePoints[0].x, paddingTop + chartHeight);
+            ctx.closePath();
+            ctx.fillStyle = incomeGradient;
+            ctx.fill();
+            ctx.restore();
+            
+            // Draw income line
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 2.5;
+            drawSmoothCurve(incomePoints);
+            ctx.stroke();
+            
+            // Draw spending curve with gradient fill
+            const spendingGradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartHeight);
+            spendingGradient.addColorStop(0, 'rgba(231, 76, 60, 0.3)');
+            spendingGradient.addColorStop(1, 'rgba(231, 76, 60, 0.05)');
+            
+            ctx.save();
+            ctx.beginPath();
+            drawSmoothCurve(spendingPoints);
+            ctx.lineTo(spendingPoints[spendingPoints.length - 1].x, paddingTop + chartHeight);
+            ctx.lineTo(spendingPoints[0].x, paddingTop + chartHeight);
+            ctx.closePath();
+            ctx.fillStyle = spendingGradient;
+            ctx.fill();
+            ctx.restore();
+            
+            // Draw spending line
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 2.5;
+            drawSmoothCurve(spendingPoints);
+            ctx.stroke();
+            
+            // Draw month labels
+            ctx.fillStyle = '#666';
+            ctx.textAlign = 'center';
+            ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            
+            monthlyData.forEach((data, index) => {
+                const x = paddingLeft + index * xStep;
+                ctx.fillText(data.month, x, size - paddingBottom + 25);
+            });
+            
+            // Draw prettier legend with rounded background
+            const legendY = paddingTop + 5;
+            const legendX = paddingLeft + chartWidth - 165;
+            const legendPadding = 8;
+            const legendItemGap = 12;
+            
+            // Background for legend
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+            ctx.shadowBlur = 8;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 2;
+            
+            // Draw rounded rectangle background
+            const legendWidth = 155;
+            const legendHeight = 28;
+            const borderRadius = 6;
+            
+            ctx.beginPath();
+            ctx.moveTo(legendX + borderRadius, legendY);
+            ctx.lineTo(legendX + legendWidth - borderRadius, legendY);
+            ctx.quadraticCurveTo(legendX + legendWidth, legendY, legendX + legendWidth, legendY + borderRadius);
+            ctx.lineTo(legendX + legendWidth, legendY + legendHeight - borderRadius);
+            ctx.quadraticCurveTo(legendX + legendWidth, legendY + legendHeight, legendX + legendWidth - borderRadius, legendY + legendHeight);
+            ctx.lineTo(legendX + borderRadius, legendY + legendHeight);
+            ctx.quadraticCurveTo(legendX, legendY + legendHeight, legendX, legendY + legendHeight - borderRadius);
+            ctx.lineTo(legendX, legendY + borderRadius);
+            ctx.quadraticCurveTo(legendX, legendY, legendX + borderRadius, legendY);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            // Income legend item with circle
+            const itemY = legendY + legendHeight / 2;
+            ctx.fillStyle = '#27ae60';
+            ctx.beginPath();
+            ctx.arc(legendX + legendPadding + 6, itemY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'left';
+            ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.fillText('Income', legendX + legendPadding + 18, itemY + 4);
+            
+            // Spending legend item with circle
+            ctx.fillStyle = '#e74c3c';
+            ctx.beginPath();
+            ctx.arc(legendX + legendPadding + 72, itemY, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#333';
+            ctx.fillText('Spending', legendX + legendPadding + 84, itemY + 4);
         }
 
         function categorizeTransaction(event, amount, comment, savedCategory) {
@@ -1104,26 +1425,34 @@
             const listContainer = document.getElementById('transactionListContainer');
             const statsContainer = document.getElementById('statisticsContainer');
             const ddContainer = document.getElementById('ddTrackingContainer');
+            const cashflowBtn = document.getElementById('cashflowBtn');
+            const debtBtn = document.getElementById('debtBtn');
+            const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
-            const ddBtn = document.getElementById('ddBtn');
             
             if (showingStatistics) {
                 listContainer.classList.add('hidden');
                 statsContainer.classList.remove('hidden');
                 ddContainer.classList.add('hidden');
+                
+                cashflowBtn.textContent = '📈';
+                debtBtn.textContent = '💀';
+                realMoneyBtn.textContent = '💰';
                 statsBtn.textContent = '🏠';
-                statsBtn.title = 'Home';
+                
                 showingDDTracking = false;
-                ddBtn.textContent = '💀';
-                ddBtn.title = 'Débit différé tracking';
                 renderStatistics();
             } else {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
+                
+                cashflowBtn.textContent = '📈';
+                debtBtn.textContent = '💀';
+                realMoneyBtn.textContent = '💰';
                 statsBtn.textContent = '📊';
-                statsBtn.title = 'Statistics';
             }
         }
+
 
         function renderStatistics() {
             let completedTransactions;
@@ -1668,12 +1997,13 @@
             
             const date = document.getElementById('dateInput').value;
             const eventName = document.getElementById('eventInput').value;
-            const amountStr = document.getElementById('amountInput').value.trim();
+            const amountInput = document.getElementById('amountInput');
+            const amountStr = String(amountInput.value).trim();
             
             // Parse amount with sign detection
             let amount;
-            if (amountStr.startsWith('+')) {
-                // Explicit income with + sign
+            if (amountStr.startsWith('+') || parseFloat(amountStr) > 0) {
+                // Explicit income with + sign OR positive number
                 amount = Math.abs(parseFloat(amountStr));
             } else {
                 // Default to expense (negative)
