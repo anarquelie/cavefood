@@ -199,7 +199,7 @@
         }
 
         .btn-primary {
-            background: #27ae60;
+            background: #667eea;
             color: white;
         }
 
@@ -505,19 +505,19 @@
             <div style="display: flex; justify-content: center; gap: 15px; margin: 20px 0;">
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <button onclick="showCashflow()" id="cashflowBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Trends">📈</button>
-                    <span style="font-size: 11px; color: #ccc;">Trends</span>
+                    <span style="font-size: 11px; color: white;">Trends</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <button onclick="showDebt()" id="debtBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Debt evolution">💀</button>
-                    <span style="font-size: 11px; color: #ccc;">Debt</span>
+                    <span style="font-size: 11px; color: white;">Debt</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <button onclick="showRealMoney()" id="realMoneyBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Real money evolution">💰</button>
-                    <span style="font-size: 11px; color: #ccc;">Real money</span>
+                    <span style="font-size: 11px; color: white;">Real money</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <button onclick="toggleStatistics()" id="statsBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Expenses">📊</button>
-                    <span style="font-size: 11px; color: #ccc;">Expenses</span>
+                    <span style="font-size: 11px; color: white;">Expenses</span>
                 </div>
             </div>
 
@@ -531,11 +531,24 @@
                         <input type="text" id="eventInput" placeholder="e.g., Groceries, Salary..." required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
                     </div>
                     
-                    <!-- Row 2: Amount and Date side by side -->
+                    <!-- Row 2: Type buttons (full width) -->
+                    <div class="form-group">
+                        <label>Type</label>
+                        <div style="display: flex; gap: 10px;">
+                            <button type="button" class="btn btn-secondary" id="expenseBtn" onclick="setTransactionType('expense')" style="flex: 1; border: 2px solid #e74c3c; background: white; color: #e74c3c; font-weight: 600;">
+                                Expense
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="incomeBtn" onclick="setTransactionType('income')" style="flex: 1; border: 2px solid #27ae60; background: white; color: #27ae60; font-weight: 600;">
+                                Income
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Row 3: Amount and Date side by side -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                         <div class="form-group" style="margin: 0;">
                             <label>Amount <span class="required">*</span></label>
-                            <input type="text" id="amountInput" placeholder="50 or +50" required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
+                            <input type="text" id="amountInput" placeholder="50.00" required style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
                         </div>
                         
                         <div class="form-group" style="margin: 0;">
@@ -571,21 +584,25 @@
                     
                     <!-- Row 5: Comment and Multiple dates (collapsible) -->
                     <div class="form-group">
-                        <details style="margin-top: 10px;">
-                            <summary style="cursor: pointer; color: #666; font-size: 14px; user-select: none;">
-                                Add comment or multiple dates
-                            </summary>
-                            <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 8px;">
-                                <label style="font-size: 13px; color: #666;">Comment</label>
-                                <textarea id="commentInput" placeholder="Optional notes..." style="padding: 8px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></textarea>
-                                
-                                <label style="font-size: 13px; color: #666;">Multiple dates</label>
-                                <button type="button" class="btn btn-secondary" onclick="openMultiDateSelector()" style="width: 100%; padding: 10px; margin-top: 5px;">
-                                    📅 Select Multiple Dates
-                                </button>
-                                <div id="selectedDatesDisplay" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+                        <div style="margin-top: 15px;">
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <span onclick="toggleExtraFields()" id="extraFieldsToggle" style="cursor: pointer; color: #667eea; font-size: 14px; text-decoration: none; border-bottom: 1px dashed #667eea; padding-bottom: 2px;">
+                                    Add comment or multiple dates
+                                </span>
                             </div>
-                        </details>
+                            <div id="extraFieldsContainer" style="display: none;">
+                                <div style="padding: 10px; background: #f9f9f9; border-radius: 8px;">
+                                    <label style="font-size: 13px; color: #666;">Comment</label>
+                                    <textarea id="commentInput" placeholder="Optional notes..." style="padding: 8px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px;"></textarea>
+                                    
+                                    <label style="font-size: 13px; color: #666;">Multiple dates</label>
+                                    <button type="button" class="btn btn-primary" onclick="openMultiDateSelector()" style="width: 100%; padding: 10px; margin-top: 5px;">
+                                        📅 Select Multiple Dates
+                                    </button>
+                                    <div id="selectedDatesDisplay" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="controls" style="margin-top: 20px;">
@@ -671,6 +688,7 @@
         let showingDDTracking = false;
         let showingIncomeSpending = false;
         let moneyViewMode = 'incomeSpending'; // 'debt', 'realMoney', 'incomeSpending' - start with Cashflow
+        let transactionType = 'expense'; // Default to expense
         let showingMyMoney = false;
         let chartInstance = null;
         let statsPeriod = 'thisMonth';
@@ -686,6 +704,22 @@
             const debtBtn = document.getElementById('debtBtn');
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
+            
+            // If already showing (button is 🏠), go home
+            if (cashflowBtn.textContent === '🏠') {
+                listContainer.classList.remove('hidden');
+                statsContainer.classList.add('hidden');
+                ddContainer.classList.add('hidden');
+                
+                cashflowBtn.textContent = '📈';
+                debtBtn.textContent = '💀';
+                realMoneyBtn.textContent = '💰';
+                statsBtn.textContent = '📊';
+                
+                showingDDTracking = false;
+                showingStatistics = false;
+                return;
+            }
             
             listContainer.classList.add('hidden');
             statsContainer.classList.add('hidden');
@@ -721,6 +755,22 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
+            // If already showing (button is 🏠), go home
+            if (debtBtn.textContent === '🏠') {
+                listContainer.classList.remove('hidden');
+                statsContainer.classList.add('hidden');
+                ddContainer.classList.add('hidden');
+                
+                cashflowBtn.textContent = '📈';
+                debtBtn.textContent = '💀';
+                realMoneyBtn.textContent = '💰';
+                statsBtn.textContent = '📊';
+                
+                showingDDTracking = false;
+                showingStatistics = false;
+                return;
+            }
+            
             listContainer.classList.add('hidden');
             statsContainer.classList.add('hidden');
             ddContainer.classList.remove('hidden');
@@ -755,6 +805,22 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
+            // If already showing (button is 🏠), go home
+            if (realMoneyBtn.textContent === '🏠') {
+                listContainer.classList.remove('hidden');
+                statsContainer.classList.add('hidden');
+                ddContainer.classList.add('hidden');
+                
+                cashflowBtn.textContent = '📈';
+                debtBtn.textContent = '💀';
+                realMoneyBtn.textContent = '💰';
+                statsBtn.textContent = '📊';
+                
+                showingDDTracking = false;
+                showingStatistics = false;
+                return;
+            }
+            
             listContainer.classList.add('hidden');
             statsContainer.classList.add('hidden');
             ddContainer.classList.remove('hidden');
@@ -777,6 +843,30 @@
             renderDDTracking();
         }
 
+
+        function setTransactionType(type) {
+            transactionType = type;
+            const expenseBtn = document.getElementById('expenseBtn');
+            const incomeBtn = document.getElementById('incomeBtn');
+            
+            if (type === 'expense') {
+                // Expense selected - red border filled, green border empty
+                expenseBtn.style.background = '#e74c3c';
+                expenseBtn.style.color = 'white';
+                expenseBtn.style.border = '2px solid #e74c3c';
+                incomeBtn.style.background = 'white';
+                incomeBtn.style.color = '#27ae60';
+                incomeBtn.style.border = '2px solid #27ae60';
+            } else {
+                // Income selected - green border filled, red border empty
+                incomeBtn.style.background = '#27ae60';
+                incomeBtn.style.color = 'white';
+                incomeBtn.style.border = '2px solid #27ae60';
+                expenseBtn.style.background = 'white';
+                expenseBtn.style.color = '#e74c3c';
+                expenseBtn.style.border = '2px solid #e74c3c';
+            }
+        }
 
         function toggleStatsPeriod() {
             if (statsPeriod === 'thisMonth') {
@@ -1849,6 +1939,19 @@
             loadFromSheet();
         }
 
+        function toggleExtraFields() {
+            const container = document.getElementById('extraFieldsContainer');
+            const toggle = document.getElementById('extraFieldsToggle');
+            
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                toggle.textContent = 'Hide comment and multiple dates';
+            } else {
+                container.style.display = 'none';
+                toggle.textContent = 'Add comment or multiple dates';
+            }
+        }
+
         function toggleForm() {
             const form = document.getElementById('transactionForm');
             form.classList.toggle('hidden');
@@ -1874,11 +1977,11 @@
             
             document.getElementById('categoryInput').value = transaction.category || 'auto';
             
-            // Set amount with appropriate sign
-            if (transaction.amount >= 0) {
-                document.getElementById('amountInput').value = '+' + transaction.amount;
+            // Set transaction type based on amount
+            if (transaction.amount < 0) {
+                setTransactionType('expense');
             } else {
-                document.getElementById('amountInput').value = Math.abs(transaction.amount);
+                setTransactionType('income');
             }
             
             editingTransactionId = transactionId;
@@ -1997,17 +2100,13 @@
             
             const date = document.getElementById('dateInput').value;
             const eventName = document.getElementById('eventInput').value;
-            const amountInput = document.getElementById('amountInput');
-            const amountStr = String(amountInput.value).trim();
+            let amount = parseFloat(document.getElementById('amountInput').value);
             
-            // Parse amount with sign detection
-            let amount;
-            if (amountStr.startsWith('+') || parseFloat(amountStr) > 0) {
-                // Explicit income with + sign OR positive number
-                amount = Math.abs(parseFloat(amountStr));
-            } else {
-                // Default to expense (negative)
-                amount = -Math.abs(parseFloat(amountStr));
+            // Apply sign based on transaction type
+            if (transactionType === 'expense' && amount > 0) {
+                amount = -amount;
+            } else if (transactionType === 'income' && amount < 0) {
+                amount = Math.abs(amount);
             }
             
             const status = document.getElementById('statusInput').value;
@@ -2056,6 +2155,7 @@
             document.getElementById('addForm').reset();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
+            setTransactionType('expense'); // Reset to expense
             document.querySelector('.form-title').textContent = 'New transaction';
             document.getElementById('saveBtn').textContent = 'Save';
             document.getElementById('categoryInput').value = 'auto';
