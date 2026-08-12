@@ -893,6 +893,15 @@
             // Determine which data to show
             const dataType = showingMyMoney ? 'myMoney' : 'dd';
             
+            // Get last 6 months in ascending chronological order (oldest first)
+            const today = new Date();
+            const last6Months = [];
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                last6Months.push(monthKey);
+            }
+            
             // Get DD transactions grouped by month
             const ddByMonth = {};
             const realMoneyByMonth = {};
@@ -909,8 +918,8 @@
                 }
             });
             
-            // Calculate Real Money for each month
-            const sortedMonths = Object.keys(ddByMonth).sort().slice(-6);
+            // Use only the last 6 months in order
+            const sortedMonths = last6Months;
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
@@ -1183,17 +1192,17 @@
             // Clear canvas
             ctx.clearRect(0, 0, size, size);
             
-            // Define the 6 months to display: Jan, Feb, Mar, Apr, May, Jun
+            // Get last 6 months in ascending chronological order (oldest first)
             const today = new Date();
-            const currentYear = today.getFullYear();
-            const monthsToShow = [
-                { year: currentYear, month: 0, name: 'Jan' },  // January
-                { year: currentYear, month: 1, name: 'Feb' },  // February
-                { year: currentYear, month: 2, name: 'Mar' },  // March
-                { year: currentYear, month: 3, name: 'Apr' },  // April
-                { year: currentYear, month: 4, name: 'May' },  // May
-                { year: currentYear, month: 5, name: 'Jun' }   // June
-            ];
+            const monthsToShow = [];
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                monthsToShow.push({
+                    year: date.getFullYear(),
+                    month: date.getMonth(),
+                    name: date.toLocaleDateString('en-US', { month: 'short' })
+                });
+            }
             
             // Calculate data for each month - COUNT BOTH COMPLETED AND UNCOMPLETED
             const monthlyData = monthsToShow.map(monthInfo => {
