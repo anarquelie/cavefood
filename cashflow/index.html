@@ -508,8 +508,8 @@
                     <span style="font-size: 11px; color: white;">Trends</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                    <button onclick="showDebt()" id="debtBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Debt evolution">💀</button>
-                    <span style="font-size: 11px; color: white;">Debt</span>
+                    <button onclick="showDebt()" id="debtBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Debit differe">💀</button>
+                    <span style="font-size: 11px; color: white;">Debit differe</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <button onclick="showRealMoney()" id="realMoneyBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Real money evolution">💰</button>
@@ -654,8 +654,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Income vs Spending View removed - now part of DD tracking -->
         </div>
         
         <!-- Multi-Date Selector Modal -->
@@ -687,11 +685,75 @@
         let showingStatistics = false;
         let showingDDTracking = false;
         let showingIncomeSpending = false;
-        let moneyViewMode = 'incomeSpending'; // 'debt', 'realMoney', 'incomeSpending' - start with Cashflow
-        let transactionType = 'expense'; // Default to expense
+        let moneyViewMode = 'incomeSpending'; 
+        let transactionType = 'expense'; 
         let showingMyMoney = false;
         let chartInstance = null;
         let statsPeriod = 'thisMonth';
+        let chartTooltipEl = null;
+
+        function showChartTooltip(x, y, text) {
+            if (!chartTooltipEl) {
+                chartTooltipEl = document.createElement('div');
+                chartTooltipEl.style.position = 'fixed';
+                chartTooltipEl.style.background = 'rgba(0, 0, 0, 0.85)';
+                chartTooltipEl.style.color = '#fff';
+                chartTooltipEl.style.padding = '6px 10px';
+                chartTooltipEl.style.borderRadius = '6px';
+                chartTooltipEl.style.fontSize = '12px';
+                chartTooltipEl.style.fontWeight = 'bold';
+                chartTooltipEl.style.pointerEvents = 'none';
+                chartTooltipEl.style.zIndex = '3000';
+                chartTooltipEl.style.transition = 'opacity 0.15s ease';
+                document.body.appendChild(chartTooltipEl);
+            }
+            chartTooltipEl.textContent = text;
+            chartTooltipEl.style.left = `${x}px`;
+            chartTooltipEl.style.top = `${y - 35}px`;
+            chartTooltipEl.style.opacity = '1';
+        }
+
+        function hideChartTooltip() {
+            if (chartTooltipEl) {
+                chartTooltipEl.style.opacity = '0';
+            }
+        }
+
+        // Global Helper Functions for Safe Local Date Parsing
+        function parseLocalDate(dateStr) {
+            if (!dateStr) return new Date(NaN);
+            const str = dateStr.toString().trim();
+            const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (match) {
+                return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
+            }
+            return new Date(str);
+        }
+
+        function getMonthKeyFromStr(dateStr) {
+            if (!dateStr) return '';
+            const str = dateStr.toString().trim();
+            const match = str.match(/^(\d{4})-(\d{2})/);
+            if (match) {
+                return `${match[1]}-${match[2]}`;
+            }
+            const d = parseLocalDate(str);
+            if (!isNaN(d.getTime())) {
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            }
+            return '';
+        }
+
+        function getNextMonthKey(monthKey) {
+            const [year, month] = monthKey.split('-').map(Number);
+            const nextDate = new Date(year, month, 1);
+            return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function isDDComment(comment) {
+            if (!comment) return false;
+            return /\bDD\b/i.test(comment.toString().trim());
+        }
 
         function showCashflow() {
             const listContainer = document.getElementById('transactionListContainer');
@@ -705,7 +767,6 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
-            // If already showing (button is 🏠), go home
             if (cashflowBtn.textContent === '🏠') {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
@@ -729,7 +790,6 @@
             ddCanvas.style.display = 'none';
             incomeSpendingCanvas.style.display = 'block';
             
-            // Update button states
             cashflowBtn.textContent = '🏠';
             debtBtn.textContent = '💀';
             realMoneyBtn.textContent = '💰';
@@ -755,7 +815,6 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
-            // If already showing (button is 🏠), go home
             if (debtBtn.textContent === '🏠') {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
@@ -775,11 +834,10 @@
             statsContainer.classList.add('hidden');
             ddContainer.classList.remove('hidden');
             
-            title.textContent = 'Debt evolution';
+            title.textContent = 'Debit differe';
             ddCanvas.style.display = 'block';
             incomeSpendingCanvas.style.display = 'none';
             
-            // Update button states
             cashflowBtn.textContent = '📈';
             debtBtn.textContent = '🏠';
             realMoneyBtn.textContent = '💰';
@@ -805,7 +863,6 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
-            // If already showing (button is 🏠), go home
             if (realMoneyBtn.textContent === '🏠') {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
@@ -829,7 +886,6 @@
             ddCanvas.style.display = 'block';
             incomeSpendingCanvas.style.display = 'none';
             
-            // Update button states
             cashflowBtn.textContent = '📈';
             debtBtn.textContent = '💀';
             realMoneyBtn.textContent = '🏠';
@@ -843,14 +899,12 @@
             renderDDTracking();
         }
 
-
         function setTransactionType(type) {
             transactionType = type;
             const expenseBtn = document.getElementById('expenseBtn');
             const incomeBtn = document.getElementById('incomeBtn');
             
             if (type === 'expense') {
-                // Expense selected - red border filled, green border empty
                 expenseBtn.style.background = '#e74c3c';
                 expenseBtn.style.color = 'white';
                 expenseBtn.style.border = '2px solid #e74c3c';
@@ -858,7 +912,6 @@
                 incomeBtn.style.color = '#27ae60';
                 incomeBtn.style.border = '2px solid #27ae60';
             } else {
-                // Income selected - green border filled, red border empty
                 incomeBtn.style.background = '#27ae60';
                 incomeBtn.style.color = 'white';
                 incomeBtn.style.border = '2px solid #27ae60';
@@ -890,43 +943,46 @@
         }
 
         function renderDDTracking() {
-            // Determine which data to show
-            const dataType = showingMyMoney ? 'myMoney' : 'dd';
-            
-            // Get DD transactions grouped by month
             const ddByMonth = {};
             const realMoneyByMonth = {};
-            
+
             transactions.forEach(t => {
-                if (t.comment && t.comment.toUpperCase().includes('DD')) {
-                    const date = new Date(t.date);
-                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    
-                    if (!ddByMonth[monthKey]) {
-                        ddByMonth[monthKey] = 0;
+                if (isDDComment(t.comment)) {
+                    const monthKey = getMonthKeyFromStr(t.date);
+                    if (monthKey) {
+                        ddByMonth[monthKey] = (ddByMonth[monthKey] || 0) + Math.abs(t.amount);
                     }
-                    ddByMonth[monthKey] += Math.abs(t.amount);
                 }
             });
-            
-            // Calculate Real Money for each month
-            const sortedMonths = Object.keys(ddByMonth).sort().slice(-6);
+
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
-            sortedMonths.forEach(monthKey => {
-                const [year, month] = monthKey.split('-');
-                const monthStart = new Date(year, month - 1, 1);
-                const monthEnd = new Date(year, month, 0);
+
+            // Generate 6 consecutive calendar months ending 1 month in the future
+            const monthsToShow = [];
+            for (let i = 4; i >= -1; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                monthsToShow.push({
+                    monthKey: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+                    label: d.toLocaleDateString('en-US', { month: 'short' }),
+                    year: d.getFullYear(),
+                    month: d.getMonth() + 1
+                });
+            }
+
+            monthsToShow.forEach(mInfo => {
+                const monthKey = mInfo.monthKey;
+                const monthStart = new Date(mInfo.year, mInfo.month - 1, 1);
+                const monthEnd = new Date(mInfo.year, mInfo.month, 0);
                 
-                const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-                const cutoffDate = (monthKey === currentMonth) ? today : monthEnd;
+                const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                const cutoffDate = (monthKey === currentMonthKey) ? today : monthEnd;
                 
                 let balance = 0;
                 let salaryInMonth = 0;
                 
                 transactions.forEach(t => {
-                    const tDate = new Date(t.date);
+                    const tDate = parseLocalDate(t.date);
                     if (tDate <= cutoffDate && t.status === '✅') {
                         balance += t.amount;
                         if (tDate >= monthStart && tDate <= cutoffDate && t.amount > 0) {
@@ -942,8 +998,7 @@
                 let nextMonthServices = 0;
                 
                 transactions.forEach(t => {
-                    const tDate = new Date(t.date);
-                    const tMonthKey = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
+                    const tMonthKey = getMonthKeyFromStr(t.date);
                     if (tMonthKey === nextMonthKey) {
                         const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                         if (category === 'Living') nextMonthLiving += t.amount;
@@ -954,14 +1009,12 @@
                 realMoneyByMonth[monthKey] = balance + nextMonthDD + nextMonthLiving + nextMonthServices - salaryInMonth;
             });
             
-            const amounts = showingMyMoney ? sortedMonths.map(m => realMoneyByMonth[m] || 0) : sortedMonths.map(m => ddByMonth[m]);
-            const labels = sortedMonths.map(m => {
-                const [year, month] = m.split('-');
-                const date = new Date(year, month - 1);
-                return date.toLocaleDateString('en-US', { month: 'short' });
-            });
+            const amounts = showingMyMoney 
+                ? monthsToShow.map(m => realMoneyByMonth[m.monthKey] || 0) 
+                : monthsToShow.map(m => ddByMonth[m.monthKey] || 0);
+                
+            const labels = monthsToShow.map(m => m.label);
             
-            // Setup canvas for high DPI
             const canvas = document.getElementById('ddChart');
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
@@ -973,16 +1026,7 @@
             
             const width = rect.width;
             const height = rect.height;
-            
             ctx.clearRect(0, 0, width, height);
-            
-            if (amounts.length === 0) {
-                ctx.font = '16px sans-serif';
-                ctx.fillStyle = '#999';
-                ctx.textAlign = 'center';
-                ctx.fillText('No data available', width / 2, height / 2);
-                return;
-            }
             
             const paddingLeft = 60;
             const paddingRight = 20;
@@ -991,31 +1035,18 @@
             const chartWidth = width - paddingLeft - paddingRight;
             const chartHeight = height - paddingTop - paddingBottom;
             
-            // Find max and min (My Money can be negative)
-            const rawMax = Math.max(...amounts.map(Math.abs));
+            const rawMax = Math.max(...amounts.map(Math.abs), 100);
             const maxAmount = Math.ceil(rawMax / 100) * 100;
             const rawMin = showingMyMoney ? Math.min(0, ...amounts) : 0;
             const minAmount = Math.floor(rawMin / 100) * 100;
-            const range = maxAmount - minAmount;
+            const range = (maxAmount - minAmount) || 1;
             
-            // Determine step size
             let stepSize = 200;
             if (range > 2000) stepSize = 500;
             if (range > 5000) stepSize = 1000;
             
-            // Draw axes
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(paddingLeft, paddingTop);
-            ctx.lineTo(paddingLeft, height - paddingBottom);
-            ctx.lineTo(width - paddingRight, height - paddingBottom);
-            ctx.stroke();
-            
-            // Draw grid lines and Y labels
             for (let value = minAmount; value <= maxAmount; value += stepSize) {
                 const y = height - paddingBottom - ((value - minAmount) / range) * chartHeight;
-                
                 ctx.strokeStyle = '#f0f0f0';
                 ctx.beginPath();
                 ctx.moveTo(paddingLeft, y);
@@ -1028,143 +1059,69 @@
                 ctx.fillText('€' + value.toFixed(0), paddingLeft - 10, y + 4);
             }
             
-            // Helper function to calculate Y position
-            const getY = (value) => {
-                return height - paddingBottom - ((value - minAmount) / range) * chartHeight;
-            };
+            const getY = (value) => height - paddingBottom - ((value - minAmount) / range) * chartHeight;
             
-            // Find min and max for color mapping
-            const minVal = Math.min(...amounts);
-            const maxVal = Math.max(...amounts);
-            
-            // Helper function to get color based on value
-            const getColor = (value, alpha = 1) => {
-                if (showingMyMoney) {
-                    // Green for positive, red for negative
-                    return value >= 0 ? `rgba(39, 174, 96, ${alpha})` : `rgba(231, 76, 60, ${alpha})`;
-                } else {
-                    // Blue (low) to Red (high) for DD
-                    const normalized = (value - minVal) / (maxVal - minVal);
-                    const r = Math.round(52 + normalized * (231 - 52));
-                    const g = Math.round(152 - normalized * (152 - 76));
-                    const b = Math.round(219 - normalized * (219 - 60));
-                    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-                }
-            };
-            
-            // Draw filled area under curve with gradient
-            const gradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
-            if (showingMyMoney) {
-                // Purple (low/negative) to Teal (high/positive) gradient
-                gradient.addColorStop(0, 'rgba(155, 89, 182, 0.2)');   // Purple at bottom (low values)
-                gradient.addColorStop(0.5, 'rgba(52, 152, 219, 0.2)'); // Blue in middle
-                gradient.addColorStop(1, 'rgba(26, 188, 156, 0.4)');   // Teal at top (high values)
-            } else {
-                gradient.addColorStop(0, getColor(minVal, 0.2));
-                gradient.addColorStop(1, getColor(maxVal, 0.4));
+            const ddPoints = [];
+            const xStep = chartWidth / (monthsToShow.length - 1);
+            for (let i = 0; i < amounts.length; i++) {
+                const x = paddingLeft + i * xStep;
+                const y = getY(amounts[i]);
+                ddPoints.push({ x, y, value: amounts[i], label: labels[i] });
             }
+            
+            const gradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
+            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
+            gradient.addColorStop(1, 'rgba(102, 126, 234, 0.4)');
             
             ctx.fillStyle = gradient;
             ctx.beginPath();
-            
-            const ddPoints = [];
-            for (let i = 0; i < amounts.length; i++) {
-                const x = paddingLeft + (chartWidth / (amounts.length - 1)) * i;
-                const y = getY(amounts[i]);
-                ddPoints.push({ x, y, value: amounts[i] });
-            }
-            
-            // Start from bottom left
             ctx.moveTo(ddPoints[0].x, height - paddingBottom);
-            ctx.lineTo(ddPoints[0].x, ddPoints[0].y);
-            
-            // Draw smooth curve through all points
-            if (ddPoints.length === 2) {
-                ctx.lineTo(ddPoints[1].x, ddPoints[1].y);
-            } else {
-                for (let i = 0; i < ddPoints.length - 1; i++) {
-                    const p0 = ddPoints[Math.max(0, i - 1)];
-                    const p1 = ddPoints[i];
-                    const p2 = ddPoints[i + 1];
-                    const p3 = ddPoints[Math.min(ddPoints.length - 1, i + 2)];
-                    
-                    const tension = 0.5;
-                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
-                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
-                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
-                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
-                    
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-                }
-            }
-            
-            // Close path to bottom
-            const lastPoint = ddPoints[ddPoints.length - 1];
-            ctx.lineTo(lastPoint.x, height - paddingBottom);
+            ddPoints.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.lineTo(ddPoints[ddPoints.length - 1].x, height - paddingBottom);
             ctx.closePath();
             ctx.fill();
-            
-            // Draw smooth line on top with gradient
-            const lineGradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
-            if (showingMyMoney) {
-                // Purple (low/negative) to Teal (high/positive) gradient
-                lineGradient.addColorStop(0, 'rgba(155, 89, 182, 1)');   // Purple at bottom
-                lineGradient.addColorStop(0.5, 'rgba(52, 152, 219, 1)'); // Blue in middle
-                lineGradient.addColorStop(1, 'rgba(26, 188, 156, 1)');   // Teal at top
-            } else {
-                lineGradient.addColorStop(0, getColor(minVal, 1));
-                lineGradient.addColorStop(1, getColor(maxVal, 1));
-            }
-            
+
             ctx.lineWidth = 3;
-            ctx.strokeStyle = lineGradient;
+            ctx.strokeStyle = '#667eea';
             ctx.beginPath();
-            
-            ctx.moveTo(ddPoints[0].x, ddPoints[0].y);
-            
-            if (ddPoints.length === 2) {
-                ctx.lineTo(ddPoints[1].x, ddPoints[1].y);
-            } else {
-                for (let i = 0; i < ddPoints.length - 1; i++) {
-                    const p0 = ddPoints[Math.max(0, i - 1)];
-                    const p1 = ddPoints[i];
-                    const p2 = ddPoints[i + 1];
-                    const p3 = ddPoints[Math.min(ddPoints.length - 1, i + 2)];
-                    
-                    const tension = 0.5;
-                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
-                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
-                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
-                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
-                    
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-                }
-            }
-            
+            ddPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
             ctx.stroke();
-            
-            // Draw DD points (interactive) - colored by value
-            ddPoints.forEach((point, i) => {
-                ctx.fillStyle = getColor(point.value, 1);
+
+            ddPoints.forEach((point) => {
+                ctx.fillStyle = '#667eea';
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
                 ctx.fill();
             });
-            
-            // Draw month labels
-            ddPoints.forEach((point, i) => {
+
+            ddPoints.forEach((point) => {
                 ctx.fillStyle = '#666';
                 ctx.font = '12px sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(labels[i], point.x, height - paddingBottom + 20);
+                ctx.fillText(point.label, point.x, height - paddingBottom + 20);
             });
-            
-        }
 
-                function getNextMonthKey(monthKey) {
-            const [year, month] = monthKey.split('-');
-            const nextDate = new Date(year, month, 1);
-            return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+            canvas.onmousemove = function (e) {
+                const cRect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - cRect.left;
+                const mouseY = e.clientY - cRect.top;
+                
+                let found = false;
+                ddPoints.forEach(p => {
+                    const dist = Math.hypot(p.x - mouseX, p.y - mouseY);
+                    if (dist < 12) {
+                        const titleText = showingMyMoney ? 'Real money' : 'Debit differe';
+                        showChartTooltip(e.clientX, e.clientY, `${titleText} (${p.label}): €${p.value.toFixed(2)}`);
+                        found = true;
+                    }
+                });
+                if (!found) hideChartTooltip();
+            };
+            canvas.onmouseleave = hideChartTooltip;
         }
 
         function renderIncomeSpending() {
@@ -1172,120 +1129,76 @@
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
             
-            // Get canvas container dimensions
             const container = canvas.parentElement;
             const size = container.offsetWidth;
             
             canvas.width = size * dpr;
             canvas.height = size * dpr;
             ctx.scale(dpr, dpr);
-            
-            // Clear canvas
             ctx.clearRect(0, 0, size, size);
             
-            // Define the 6 months to display: Jan, Feb, Mar, Apr, May, Jun
             const today = new Date();
-            const currentYear = today.getFullYear();
-            const monthsToShow = [
-                { year: currentYear, month: 0, name: 'Jan' },  // January
-                { year: currentYear, month: 1, name: 'Feb' },  // February
-                { year: currentYear, month: 2, name: 'Mar' },  // March
-                { year: currentYear, month: 3, name: 'Apr' },  // April
-                { year: currentYear, month: 4, name: 'May' },  // May
-                { year: currentYear, month: 5, name: 'Jun' }   // June
-            ];
+            const monthsToShow = [];
+            for (let i = 4; i >= -1; i--) {
+                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                monthsToShow.push({
+                    year: d.getFullYear(),
+                    month: d.getMonth(),
+                    name: d.toLocaleDateString('en-US', { month: 'short' })
+                });
+            }
             
-            // Calculate data for each month - COUNT BOTH COMPLETED AND UNCOMPLETED
-            const monthlyData = monthsToShow.map(monthInfo => {
+            const monthlyData = monthsToShow.map(mInfo => {
                 let income = 0;
                 let spending = 0;
                 
                 transactions.forEach(t => {
-                    // Count all transactions, not just completed ones
-                    const tDate = new Date(t.date);
-                    if (tDate.getMonth() === monthInfo.month && tDate.getFullYear() === monthInfo.year) {
-                        if (t.amount > 0) {
-                            income += t.amount;
-                        } else {
-                            spending += Math.abs(t.amount);
+                    const mKey = getMonthKeyFromStr(t.date);
+                    if (mKey) {
+                        const [tYear, tMonth1] = mKey.split('-').map(Number);
+                        const tMonth = tMonth1 - 1;
+                        if (tMonth === mInfo.month && tYear === mInfo.year) {
+                            if (t.amount > 0) {
+                                income += t.amount;
+                            } else {
+                                spending += Math.abs(t.amount);
+                            }
                         }
                     }
                 });
                 
-                return {
-                    month: monthInfo.name,
-                    income: income,
-                    spending: spending
-                };
+                return { month: mInfo.name, income, spending };
             });
             
-            // Chart dimensions
             const paddingLeft = 60;
             const paddingRight = 20;
             const paddingTop = 20;
             const paddingBottom = 50;
-            
             const chartWidth = size - paddingLeft - paddingRight;
             const chartHeight = size - paddingTop - paddingBottom;
             
-            // Find max value for scaling
-            const maxValue = Math.max(...monthlyData.map(d => Math.max(d.income, d.spending)), 100); // Minimum 100
+            const maxValue = Math.max(...monthlyData.map(d => Math.max(d.income, d.spending)), 100);
             let yMax = Math.ceil(maxValue / 100) * 100;
             
-            // Determine Y-axis step
-            let yStep;
-            if (yMax <= 1000) {
-                yStep = 200;
-            } else if (yMax <= 2500) {
-                yStep = 500;
-            } else {
-                yStep = 1000;
-            }
+            let yStep = yMax <= 1000 ? 200 : (yMax <= 2500 ? 500 : 1000);
             yMax = Math.ceil(maxValue / yStep) * yStep;
             
-            // Draw Y-axis grid lines and labels
             const ySteps = yMax / yStep;
             ctx.strokeStyle = '#e0e0e0';
             ctx.lineWidth = 1;
             ctx.fillStyle = '#999';
-            ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.font = '12px sans-serif';
             ctx.textAlign = 'right';
             
             for (let i = 0; i <= ySteps; i++) {
                 const y = paddingTop + chartHeight - (i / ySteps) * chartHeight;
-                const value = i * yStep;
-                
                 ctx.beginPath();
                 ctx.moveTo(paddingLeft, y);
                 ctx.lineTo(paddingLeft + chartWidth, y);
                 ctx.stroke();
-                
-                ctx.fillText('€' + value, paddingLeft - 10, y + 4);
+                ctx.fillText('€' + (i * yStep), paddingLeft - 10, y + 4);
             }
             
-            // Helper function for smooth curves (cardinal spline)
-            function drawSmoothCurve(points, tension = 0.5) {
-                if (points.length < 2) return;
-                
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-                
-                for (let i = 0; i < points.length - 1; i++) {
-                    const p0 = points[Math.max(0, i - 1)];
-                    const p1 = points[i];
-                    const p2 = points[i + 1];
-                    const p3 = points[Math.min(points.length - 1, i + 2)];
-                    
-                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
-                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
-                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
-                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
-                    
-                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
-                }
-            }
-            
-            // Prepare data points
             const incomePoints = [];
             const spendingPoints = [];
             const xStep = chartWidth / (monthlyData.length - 1);
@@ -1295,138 +1208,78 @@
                 const incomeY = paddingTop + chartHeight - (data.income / yMax) * chartHeight;
                 const spendingY = paddingTop + chartHeight - (data.spending / yMax) * chartHeight;
                 
-                incomePoints.push({ x, y: incomeY });
-                spendingPoints.push({ x, y: spendingY });
+                incomePoints.push({ x, y: incomeY, val: data.income, label: data.month });
+                spendingPoints.push({ x, y: spendingY, val: data.spending, label: data.month });
             });
             
-            // Draw income curve with gradient fill
-            const incomeGradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartHeight);
-            incomeGradient.addColorStop(0, 'rgba(39, 174, 96, 0.3)');
-            incomeGradient.addColorStop(1, 'rgba(39, 174, 96, 0.05)');
-            
-            ctx.save();
-            drawSmoothCurve(incomePoints);
-            ctx.lineTo(incomePoints[incomePoints.length - 1].x, paddingTop + chartHeight);
-            ctx.lineTo(incomePoints[0].x, paddingTop + chartHeight);
-            ctx.closePath();
-            ctx.fillStyle = incomeGradient;
-            ctx.fill();
-            ctx.restore();
-            
-            // Draw income line
             ctx.strokeStyle = '#27ae60';
             ctx.lineWidth = 2.5;
-            drawSmoothCurve(incomePoints);
+            ctx.beginPath();
+            incomePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
             ctx.stroke();
             
-            // Draw spending curve with gradient fill
-            const spendingGradient = ctx.createLinearGradient(0, paddingTop, 0, paddingTop + chartHeight);
-            spendingGradient.addColorStop(0, 'rgba(231, 76, 60, 0.3)');
-            spendingGradient.addColorStop(1, 'rgba(231, 76, 60, 0.05)');
-            
-            ctx.save();
-            ctx.beginPath();
-            drawSmoothCurve(spendingPoints);
-            ctx.lineTo(spendingPoints[spendingPoints.length - 1].x, paddingTop + chartHeight);
-            ctx.lineTo(spendingPoints[0].x, paddingTop + chartHeight);
-            ctx.closePath();
-            ctx.fillStyle = spendingGradient;
-            ctx.fill();
-            ctx.restore();
-            
-            // Draw spending line
+            incomePoints.forEach(p => {
+                ctx.fillStyle = '#27ae60';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
             ctx.strokeStyle = '#e74c3c';
             ctx.lineWidth = 2.5;
-            drawSmoothCurve(spendingPoints);
+            ctx.beginPath();
+            spendingPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
             ctx.stroke();
             
-            // Draw month labels
+            spendingPoints.forEach(p => {
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
             ctx.fillStyle = '#666';
             ctx.textAlign = 'center';
-            ctx.font = '13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            
+            ctx.font = '13px sans-serif';
             monthlyData.forEach((data, index) => {
                 const x = paddingLeft + index * xStep;
                 ctx.fillText(data.month, x, size - paddingBottom + 25);
             });
-            
-            // Draw prettier legend with rounded background
-            const legendY = paddingTop + 5;
-            const legendX = paddingLeft + chartWidth - 165;
-            const legendPadding = 8;
-            const legendItemGap = 12;
-            
-            // Background for legend
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
-            ctx.shadowBlur = 8;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 2;
-            
-            // Draw rounded rectangle background
-            const legendWidth = 155;
-            const legendHeight = 28;
-            const borderRadius = 6;
-            
-            ctx.beginPath();
-            ctx.moveTo(legendX + borderRadius, legendY);
-            ctx.lineTo(legendX + legendWidth - borderRadius, legendY);
-            ctx.quadraticCurveTo(legendX + legendWidth, legendY, legendX + legendWidth, legendY + borderRadius);
-            ctx.lineTo(legendX + legendWidth, legendY + legendHeight - borderRadius);
-            ctx.quadraticCurveTo(legendX + legendWidth, legendY + legendHeight, legendX + legendWidth - borderRadius, legendY + legendHeight);
-            ctx.lineTo(legendX + borderRadius, legendY + legendHeight);
-            ctx.quadraticCurveTo(legendX, legendY + legendHeight, legendX, legendY + legendHeight - borderRadius);
-            ctx.lineTo(legendX, legendY + borderRadius);
-            ctx.quadraticCurveTo(legendX, legendY, legendX + borderRadius, legendY);
-            ctx.closePath();
-            ctx.fill();
-            
-            // Reset shadow
-            ctx.shadowColor = 'transparent';
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetX = 0;
-            ctx.shadowOffsetY = 0;
-            
-            // Income legend item with circle
-            const itemY = legendY + legendHeight / 2;
-            ctx.fillStyle = '#27ae60';
-            ctx.beginPath();
-            ctx.arc(legendX + legendPadding + 6, itemY, 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#333';
-            ctx.textAlign = 'left';
-            ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.fillText('Income', legendX + legendPadding + 18, itemY + 4);
-            
-            // Spending legend item with circle
-            ctx.fillStyle = '#e74c3c';
-            ctx.beginPath();
-            ctx.arc(legendX + legendPadding + 72, itemY, 5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            ctx.fillStyle = '#333';
-            ctx.fillText('Spending', legendX + legendPadding + 84, itemY + 4);
+
+            canvas.onmousemove = function (e) {
+                const cRect = canvas.getBoundingClientRect();
+                const mouseX = e.clientX - cRect.left;
+                const mouseY = e.clientY - cRect.top;
+                
+                let found = false;
+                incomePoints.forEach(p => {
+                    if (Math.hypot(p.x - mouseX, p.y - mouseY) < 10) {
+                        showChartTooltip(e.clientX, e.clientY, `Income (${p.label}): €${p.val.toFixed(2)}`);
+                        found = true;
+                    }
+                });
+                spendingPoints.forEach(p => {
+                    if (Math.hypot(p.x - mouseX, p.y - mouseY) < 10) {
+                        showChartTooltip(e.clientX, e.clientY, `Spending (${p.label}): €${p.val.toFixed(2)}`);
+                        found = true;
+                    }
+                });
+                if (!found) hideChartTooltip();
+            };
+            canvas.onmouseleave = hideChartTooltip;
         }
 
         function categorizeTransaction(event, amount, comment, savedCategory) {
-            // If there's a manually saved category in the sheet, use it
             if (savedCategory && savedCategory !== 'auto' && savedCategory !== '') {
                 return savedCategory;
             }
             
             const eventLower = event.toLowerCase();
             
-            // Income
             if (amount > 0) {
                 return 'Income';
             }
             
-            // NOTE: We no longer assign "Débit différé" as a category
-            // DD transactions are identified by comment "DD" for calculations only
-            // They should be categorized by their actual expense type (Living, Services, etc.)
-            
-            // Well-being: spa, massage, hair, beauty, gym, sports
             if (eventLower.includes('spa') || 
                 eventLower.includes('massage') ||
                 eventLower.includes('hair') ||
@@ -1439,7 +1292,6 @@
                 return 'Well-being';
             }
             
-            // Pets - guinea pigs and pet-related
             if (eventLower.includes('guinea') || 
                 eventLower.includes('pet') ||
                 eventLower.includes('cochon') ||
@@ -1449,7 +1301,6 @@
                 return 'Pets';
             }
             
-            // Living: Rent, utilities, internet, phone, transport
             if (eventLower.includes('rent') || 
                 eventLower.includes('fibre') || 
                 eventLower.includes('sosh') || 
@@ -1462,7 +1313,6 @@
                 return 'Living';
             }
             
-            // Food: Groceries, canteen, restaurants
             if (eventLower.includes('groceries') || 
                 eventLower.includes('grocer') ||
                 eventLower.includes('lidl') ||
@@ -1475,7 +1325,6 @@
                 return 'Food';
             }
             
-            // Social: Bars, restaurants, entertainment, cinema, tobacco
             if (eventLower.includes('bar') || 
                 eventLower.includes('restaurant') ||
                 eventLower.includes('resto') ||
@@ -1491,7 +1340,6 @@
                 return 'Social';
             }
             
-            // Services: Subscriptions, insurance, bank fees
             if (eventLower.includes('subscription') || 
                 eventLower.includes('insurance') || 
                 eventLower.includes('assurance') ||
@@ -1506,7 +1354,6 @@
                 return 'Services';
             }
             
-            // Other: Everything else
             return 'Other';
         }
 
@@ -1543,7 +1390,6 @@
             }
         }
 
-
         function renderStatistics() {
             let completedTransactions;
             
@@ -1554,16 +1400,24 @@
             if (statsPeriod === 'thisMonth') {
                 completedTransactions = transactions.filter(t => {
                     if (t.status !== '✅') return false;
-                    const tDate = new Date(t.date);
-                    return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
+                    const mKey = getMonthKeyFromStr(t.date);
+                    if (mKey) {
+                        const [tYear, tMonth1] = mKey.split('-').map(Number);
+                        return (tMonth1 - 1) === currentMonth && tYear === currentYear;
+                    }
+                    return false;
                 });
             } else if (statsPeriod === 'nextMonth') {
                 const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
                 const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
                 
                 completedTransactions = transactions.filter(t => {
-                    const tDate = new Date(t.date);
-                    return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
+                    const mKey = getMonthKeyFromStr(t.date);
+                    if (mKey) {
+                        const [tYear, tMonth1] = mKey.split('-').map(Number);
+                        return (tMonth1 - 1) === nextMonth && tYear === nextYear;
+                    }
+                    return false;
                 });
             } else {
                 completedTransactions = transactions.filter(t => t.status === '✅');
@@ -1622,7 +1476,7 @@
             
             breakdown.innerHTML = `
                 ${categories.map((cat, i) => {
-                    const percentage = ((amounts[i] / total) * 100).toFixed(1);
+                    const percentage = total > 0 ? ((amounts[i] / total) * 100).toFixed(1) : '0.0';
                     return `
                         <div onclick="showCategoryTransactions('${cat}')" style="padding: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='white'">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1670,6 +1524,8 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             const total = data.reduce((sum, val) => sum + val, 0);
+            if (total === 0) return;
+            
             let currentAngle = -Math.PI / 2;
             
             data.forEach((value, index) => {
@@ -1678,7 +1534,7 @@
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
                 ctx.lineTo(centerX, centerY);
-                ctx.fillStyle = colors[labels[index]];
+                ctx.fillStyle = colors[labels[index]] || '#999';
                 ctx.fill();
                 
                 const labelAngle = currentAngle + sliceAngle / 2;
@@ -1703,25 +1559,29 @@
                 .filter(t => {
                     if (categorizeTransaction(t.event, t.amount, t.comment, t.category) !== category) return false;
                     
-                    const tDate = new Date(t.date);
-                    if (statsPeriod === 'thisMonth') {
-                        if (tDate.getMonth() !== now.getMonth() || tDate.getFullYear() !== now.getFullYear()) {
-                            return false;
+                    const mKey = getMonthKeyFromStr(t.date);
+                    if (mKey) {
+                        const [tYear, tMonth1] = mKey.split('-').map(Number);
+                        const tMonth = tMonth1 - 1;
+                        if (statsPeriod === 'thisMonth') {
+                            if (tMonth !== now.getMonth() || tYear !== now.getFullYear()) {
+                                return false;
+                            }
+                            if (t.status !== '✅') return false;
+                        } else if (statsPeriod === 'nextMonth') {
+                            const nextMonth = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
+                            const nextYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+                            if (tMonth !== nextMonth || tYear !== nextYear) {
+                                return false;
+                            }
+                        } else {
+                            if (t.status !== '✅') return false;
                         }
-                        if (t.status !== '✅') return false;
-                    } else if (statsPeriod === 'nextMonth') {
-                        const nextMonth = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
-                        const nextYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
-                        if (tDate.getMonth() !== nextMonth || tDate.getFullYear() !== nextYear) {
-                            return false;
-                        }
-                    } else {
-                        if (t.status !== '✅') return false;
+                        return true;
                     }
-                    
-                    return true;
+                    return false;
                 })
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
+                .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
             
             if (categoryTransactions.length === 0) {
                 container.innerHTML = `
@@ -1762,7 +1622,6 @@
             `;
         }
 
-
         function init() {
             const savedScriptUrl = localStorage.getItem('scriptUrl');
             if (savedScriptUrl) {
@@ -1776,7 +1635,7 @@
             document.getElementById('dateInput').value = today;
             
             document.getElementById('dateInput').addEventListener('change', function(e) {
-                const selectedDate = new Date(e.target.value);
+                const selectedDate = parseLocalDate(e.target.value);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
                 selectedDate.setHours(0, 0, 0, 0);
@@ -1837,22 +1696,33 @@
                 const dataRows = rows.slice(1);
                 
                 transactions = dataRows.map((row, index) => {
-                    let date;
+                    let dateStr = '';
                     let dateWarning = '';
+                    
                     try {
                         if (row[0]) {
-                            const dateStr = typeof row[0] === 'string' ? row[0] : row[0].toString();
-                            date = new Date(dateStr);
-                            if (isNaN(date.getTime())) {
-                                dateWarning = ` ⚠️ Invalid date: ${row[0]}`;
-                                date = new Date();
+                            const raw = row[0].toString().trim();
+                            const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                            if (match) {
+                                dateStr = `${match[1]}-${match[2]}-${match[3]}`;
+                            } else {
+                                const parsedDate = new Date(row[0]);
+                                if (!isNaN(parsedDate.getTime())) {
+                                    const y = parsedDate.getFullYear();
+                                    const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                                    const d = String(parsedDate.getDate()).padStart(2, '0');
+                                    dateStr = `${y}-${m}-${d}`;
+                                } else {
+                                    dateStr = new Date().toISOString().split('T')[0];
+                                    dateWarning = ` ⚠️ Invalid date`;
+                                }
                             }
                         } else {
-                            date = new Date();
+                            dateStr = new Date().toISOString().split('T')[0];
                         }
                     } catch (e) {
                         dateWarning = ` ⚠️ Date error`;
-                        date = new Date();
+                        dateStr = new Date().toISOString().split('T')[0];
                     }
                     
                     const completed = row[4];
@@ -1863,10 +1733,10 @@
                     
                     return {
                         id: index,
-                        date: date.toISOString().split('T')[0],
+                        date: dateStr,
                         event: row[1] || '',
                         amount: parseFloat(row[2]) || 0,
-                        category: row[3] || '', // Category from column D (index 3)
+                        category: row[3] || '',
                         status: status,
                         comment: ((row[5] !== undefined && row[5] !== null) ? row[5] : '') + dateWarning
                     };
@@ -1888,7 +1758,7 @@
             updateSyncStatus('syncing', 'Saving to Google Sheets...');
             
             try {
-                const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+                const sorted = [...transactions].sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
                 
                 const rows = sorted.map(t => {
                     const completed = (t.status === '✅' || t.status === '▶️') ? 'TRUE' : 'FALSE';
@@ -1897,7 +1767,7 @@
                         t.date,
                         t.event,
                         t.amount,
-                        categoryToSave, // Category in column D
+                        categoryToSave,
                         completed,
                         t.comment
                     ];
@@ -1974,10 +1844,8 @@
             document.getElementById('amountInput').value = Math.abs(transaction.amount);
             document.getElementById('statusInput').value = transaction.status;
             document.getElementById('commentInput').value = transaction.comment || '';
-            
             document.getElementById('categoryInput').value = transaction.category || 'auto';
             
-            // Set transaction type based on amount
             if (transaction.amount < 0) {
                 setTransactionType('expense');
             } else {
@@ -1988,14 +1856,11 @@
             document.querySelector('.form-title').textContent = 'Edit transaction';
             document.getElementById('saveBtn').textContent = 'Update transaction';
             document.getElementById('deleteBtn').classList.remove('hidden');
-            
             document.getElementById('transactionForm').classList.remove('hidden');
         }
 
         async function deleteTransaction() {
-            if (!confirm('Delete this transaction?')) {
-                return;
-            }
+            if (!confirm('Delete this transaction?')) return;
             
             if (editingTransactionId !== null) {
                 transactions = transactions.filter(t => t.id !== editingTransactionId);
@@ -2003,9 +1868,7 @@
                 
                 renderTransactions();
                 updateBalance();
-                
                 await saveToSheet();
-                
                 toggleForm();
             }
         }
@@ -2014,7 +1877,6 @@
             const modal = document.getElementById('multiDateModal');
             modal.style.display = 'flex';
             
-            // Set default date to current date input value
             const currentDate = document.getElementById('dateInput').value;
             if (currentDate) {
                 document.getElementById('multiDatePicker').value = currentDate;
@@ -2052,7 +1914,8 @@
             }
             
             list.innerHTML = selectedMultipleDates.map(date => {
-                const dateObj = new Date(date + 'T00:00:00');
+                const parts = date.split('-');
+                const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
                 const formatted = dateObj.toLocaleDateString('en-US', { 
                     weekday: 'short', 
                     year: 'numeric', 
@@ -2075,13 +1938,11 @@
                 return;
             }
             
-            // Update the display
             const display = document.getElementById('selectedDatesDisplay');
             display.textContent = `${selectedMultipleDates.length} dates selected`;
             display.style.color = '#27ae60';
             display.style.fontWeight = '600';
             
-            // Disable the single date input
             document.getElementById('dateInput').disabled = true;
             document.getElementById('dateInput').style.opacity = '0.5';
             
@@ -2102,7 +1963,6 @@
             const eventName = document.getElementById('eventInput').value;
             let amount = parseFloat(document.getElementById('amountInput').value);
             
-            // Apply sign based on transaction type
             if (transactionType === 'expense' && amount > 0) {
                 amount = -amount;
             } else if (transactionType === 'income' && amount < 0) {
@@ -2114,7 +1974,6 @@
             const selectedCategory = document.getElementById('categoryInput').value;
 
             if (editingTransactionId !== null) {
-                // Edit existing transaction (no multiple dates for editing)
                 const index = transactions.findIndex(t => t.id === editingTransactionId);
                 if (index !== -1) {
                     transactions[index] = {
@@ -2129,13 +1988,11 @@
                 }
                 editingTransactionId = null;
             } else {
-                // Determine which dates to use
                 const datesToUse = selectedMultipleDates.length > 0 ? selectedMultipleDates : [date];
                 
-                // Create transaction for each selected date
                 datesToUse.forEach(transDate => {
                     const transaction = {
-                        id: Date.now() + Math.random(), // Ensure unique IDs
+                        id: Date.now() + Math.random(),
                         date: transDate,
                         event: eventName,
                         amount: amount,
@@ -2149,17 +2006,16 @@
 
             renderTransactions();
             updateBalance();
-            
             await saveToSheet();
             
             document.getElementById('addForm').reset();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
-            setTransactionType('expense'); // Reset to expense
+            setTransactionType('expense');
             document.querySelector('.form-title').textContent = 'New transaction';
             document.getElementById('saveBtn').textContent = 'Save';
             document.getElementById('categoryInput').value = 'auto';
-            clearMultipleDates(); // Clear multiple dates selection
+            clearMultipleDates();
             toggleForm();
         }
 
@@ -2168,13 +2024,13 @@
             today.setHours(0, 0, 0, 0);
             
             const todayTransactions = transactions.filter(t => {
-                const transactionDate = new Date(t.date);
+                const transactionDate = parseLocalDate(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 return transactionDate <= today;
             });
             
             const futureTransactions = transactions.filter(t => {
-                const transactionDate = new Date(t.date);
+                const transactionDate = parseLocalDate(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 return transactionDate > today;
             });
@@ -2187,19 +2043,16 @@
                 .filter(t => t.status === '⏳')
                 .reduce((sum, t) => sum + t.amount, 0);
             
-            const sortedFuture = [...futureTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
-            const nextSalaryIndex = sortedFuture.findIndex(t => t.amount > 0 && t.event.toLowerCase().includes('salary'));
-            
+            const sortedFuture = [...futureTransactions].sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
+            
             const upcomingThisMonth = futureTransactions.filter(t => {
-                const tDate = new Date(t.date);
+                const tDate = parseLocalDate(t.date);
                 return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            const nextDebitDiffere = sortedFuture.find(t => 
-                t.comment && t.comment.toUpperCase().includes('DD')
-            );
+            const nextDebitDiffere = sortedFuture.find(t => isDDComment(t.comment));
             
             let transactionsUntilDebit = 0;
             let balanceAfterNextDebit = null;
@@ -2208,13 +2061,13 @@
             let availableNextMonth = null;
             
             if (nextDebitDiffere) {
-                const firstDebitDate = new Date(nextDebitDiffere.date);
+                const firstDebitDate = parseLocalDate(nextDebitDiffere.date);
                 const nextMonth = firstDebitDate.getMonth();
                 const nextYear = firstDebitDate.getFullYear();
                 
                 const nextMonthDebitDiffere = sortedFuture.filter(t => {
-                    const tDate = new Date(t.date);
-                    return (t.comment && t.comment.toUpperCase().includes('DD')) &&
+                    const tDate = parseLocalDate(t.date);
+                    return isDDComment(t.comment) &&
                            tDate.getMonth() === nextMonth &&
                            tDate.getFullYear() === nextYear;
                 });
@@ -2223,7 +2076,7 @@
                 balanceAfterJustDebit = available + nextDebitAmount;
                 
                 const thisMonthSalary = sortedFuture.filter(t => {
-                    const tDate = new Date(t.date);
+                    const tDate = parseLocalDate(t.date);
                     return t.amount > 0 && 
                            t.event.toLowerCase().includes('salary') &&
                            tDate.getMonth() === currentMonth &&
@@ -2231,7 +2084,7 @@
                 }).reduce((sum, t) => sum + t.amount, 0);
                 
                 const nextMonthTransactions = sortedFuture.filter(t => {
-                    const tDate = new Date(t.date);
+                    const tDate = parseLocalDate(t.date);
                     return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
                 });
                 
@@ -2241,8 +2094,7 @@
                 
                 nextMonthTransactions.forEach(t => {
                     const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                    // Débit différé is identified by comment "DD", not category
-                    if (t.comment && t.comment.toUpperCase().includes('DD')) {
+                    if (isDDComment(t.comment)) {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
                         nextMonthLiving += t.amount;
@@ -2269,7 +2121,7 @@
         }
 
         function updateBalance() {
-            const { total, available, pendingToday, upcomingThisMonth, balanceAfterNextDebit, balanceAfterJustDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
+            const { available, balanceAfterNextDebit, balanceAfterJustDebit, futureCount } = calculateBalance();
             
             const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
             const myMoneyEl = document.getElementById('myMoneyBalance');
@@ -2291,11 +2143,7 @@
             const afterDebitEl = document.getElementById('afterDebitBalance');
             if (balanceAfterNextDebit !== null) {
                 afterDebitEl.textContent = `€${balanceAfterNextDebit.toFixed(2)}`;
-                if (balanceAfterNextDebit < 0) {
-                    afterDebitEl.style.color = '#e74c3c';
-                } else {
-                    afterDebitEl.style.color = '#27ae60';
-                }
+                afterDebitEl.style.color = balanceAfterNextDebit < 0 ? '#e74c3c' : '#27ae60';
             } else {
                 afterDebitEl.textContent = 'N/A';
                 afterDebitEl.style.color = '#999';
@@ -2321,18 +2169,18 @@
                 endNextMonth.setHours(23, 59, 59, 999);
 
                 displayTransactions = transactions.filter(t => {
-                    const transactionDate = new Date(t.date);
+                    const transactionDate = parseLocalDate(t.date);
                     return transactionDate <= endNextMonth;
                 });
             } else {
                 displayTransactions = transactions.filter(t => {
-                    const transactionDate = new Date(t.date);
+                    const transactionDate = parseLocalDate(t.date);
                     transactionDate.setHours(0, 0, 0, 0);
                     return transactionDate <= today;
                 });
             }
 
-            const sorted = [...displayTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            const sorted = [...displayTransactions].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
             
             const categoryEmojis = {
                 'Living': '🏠',
@@ -2347,14 +2195,14 @@
             
             const withBalances = sorted.reverse().map(t => {
                 const upToDate = transactions.filter(tx => {
-                    return new Date(tx.date) <= new Date(t.date);
+                    return parseLocalDate(tx.date) <= parseLocalDate(t.date);
                 }).reduce((sum, tx) => sum + tx.amount, 0);
                 const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                 return { ...t, balance: upToDate, category: category };
             }).reverse();
 
             container.innerHTML = withBalances.map(t => {
-                const transactionDate = new Date(t.date);
+                const transactionDate = parseLocalDate(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const isFuture = transactionDate > today;
                 const categoryEmoji = categoryEmojis[t.category] || '❓';
@@ -2372,7 +2220,7 @@
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}" style="${boldStyle}">
-                            ${t.amount >= 0 ? '' : ''}€${Math.abs(t.amount).toFixed(2)}
+                            €${Math.abs(t.amount).toFixed(2)}
                         </div>
                         <div class="transaction-balance" style="${greyStyle}">€${t.balance.toFixed(2)}</div>
                     </div>
@@ -2419,7 +2267,7 @@
             const todayStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
             
             const completedToday = transactions.filter(t => {
-                const transactionDate = new Date(t.date);
+                const transactionDate = parseLocalDate(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
@@ -2443,36 +2291,34 @@
             const currentYear = today.getFullYear();
             
             const sortedFuture = transactions.filter(t => {
-                const transactionDate = new Date(t.date);
+                const transactionDate = parseLocalDate(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
                 return transactionDate > todayDate;
-            }).sort((a, b) => new Date(a.date) - new Date(b.date));
+            }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
             
             const thisMonthSalary = sortedFuture.filter(t => {
-                const tDate = new Date(t.date);
+                const tDate = parseLocalDate(t.date);
                 return t.amount > 0 && 
                        t.event.toLowerCase().includes('salary') &&
                        tDate.getMonth() === currentMonth &&
                        tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            const nextDebitDiffere = sortedFuture.find(t => 
-                t.comment && t.comment.toUpperCase().includes('DD')
-            );
+            const nextDebitDiffere = sortedFuture.find(t => isDDComment(t.comment));
             
             let explanation = '📅 Available next month:\n\n';
             explanation += `Available today: €${available.toFixed(2)}\n`;
             explanation += `+ This month's salary: €${thisMonthSalary.toFixed(2)}\n`;
             
             if (nextDebitDiffere) {
-                const firstDebitDate = new Date(nextDebitDiffere.date);
+                const firstDebitDate = parseLocalDate(nextDebitDiffere.date);
                 const nextMonth = firstDebitDate.getMonth();
                 const nextYear = firstDebitDate.getFullYear();
                 
                 const nextMonthTransactions = sortedFuture.filter(t => {
-                    const tDate = new Date(t.date);
+                    const tDate = parseLocalDate(t.date);
                     return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
                 });
                 
@@ -2482,8 +2328,7 @@
                 
                 nextMonthTransactions.forEach(t => {
                     const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                    // Débit différé is identified by comment "DD", not category
-                    if (t.comment && t.comment.toUpperCase().includes('DD')) {
+                    if (isDDComment(t.comment)) {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
                         nextMonthLiving += t.amount;
@@ -2507,7 +2352,8 @@
         }
 
         function formatDate(dateStr) {
-            const date = new Date(dateStr);
+            const date = parseLocalDate(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
             const day = date.getDate();
             const month = date.toLocaleString('en', { month: 'short' });
             return `${day} ${month}`;
