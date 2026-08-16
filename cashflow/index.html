@@ -227,6 +227,32 @@
             cursor: not-allowed;
         }
 
+        .category-btn {
+            height: 44px;
+            padding: 0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 21px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .category-btn:hover {
+            border-color: #667eea;
+            background: #f7f7ff;
+            transform: translateY(-1px);
+        }
+
+        .category-btn.selected {
+            border-color: #667eea;
+            background: #eef0ff;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.12);
+        }
+
         .form-card {
             background: white;
             padding: 20px;
@@ -508,8 +534,8 @@
                     <span style="font-size: 11px; color: white;">Trends</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-                    <button onclick="showDebt()" id="debtBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Debit differe">💀</button>
-                    <span style="font-size: 11px; color: white;">Debit differe</span>
+                    <button onclick="showDebt()" id="debtBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Debt evolution">💀</button>
+                    <span style="font-size: 11px; color: white;">Débit différé</span>
                 </div>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
                     <button onclick="showRealMoney()" id="realMoneyBtn" style="width: 50px; height: 50px; border-radius: 50%; background: white; border: none; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.2s; display: flex; align-items: center; justify-content: center;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'; this.style.transform='translateY(0)';" title="Real money evolution">💰</button>
@@ -557,32 +583,38 @@
                         </div>
                     </div>
                     
-                    <!-- Row 4: Status and Category side by side -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px;">
+                    <!-- Row 4: Status and DD button -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; align-items: end;">
                         <div class="form-group" style="margin: 0;">
                             <label>Status</label>
-                            <select id="statusInput" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
+                            <select id="statusInput" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; height: 44px;">
                                 <option value="✅">✅ Completed</option>
                                 <option value="⏳">⏳ Expected</option>
                             </select>
                         </div>
-                        
-                        <div class="form-group" style="margin: 0;">
-                            <label>Category</label>
-                            <select id="categoryInput" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px;">
-                                <option value="auto">Auto-detect</option>
-                                <option value="Living">🏠 Living</option>
-                                <option value="Food">🥕 Food</option>
-                                <option value="Services">💳 Services</option>
-                                <option value="Social">🍻 Social</option>
-                                <option value="Well-being">💆 Well-being</option>
-                                <option value="Pets">🐹 Pets</option>
-                                <option value="Other">🧾 Other</option>
-                            </select>
+
+                        <button type="button" class="btn btn-secondary" id="ddBtn" onclick="toggleDD()" style="width: 100%; height: 44px; border: 2px solid #000; background: white; color: #000; font-weight: 600; padding: 10px; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                            💀 DD
+                        </button>
+                    </div>
+
+                    <!-- Row 5: Category full width -->
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label>Category</label>
+                        <div id="categoryButtons" style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; width: 100%;">
+                            <button type="button" class="category-btn selected" data-category="auto" onclick="setCategory('auto')" title="Auto-detect">✨</button>
+                            <button type="button" class="category-btn" data-category="Living" onclick="setCategory('Living')" title="Living">🏠</button>
+                            <button type="button" class="category-btn" data-category="Food" onclick="setCategory('Food')" title="Food">🥕</button>
+                            <button type="button" class="category-btn" data-category="Services" onclick="setCategory('Services')" title="Services">💳</button>
+                            <button type="button" class="category-btn" data-category="Social" onclick="setCategory('Social')" title="Social">🍻</button>
+                            <button type="button" class="category-btn" data-category="Well-being" onclick="setCategory('Well-being')" title="Well-being">💆</button>
+                            <button type="button" class="category-btn" data-category="Pets" onclick="setCategory('Pets')" title="Pets">🐹</button>
+                            <button type="button" class="category-btn" data-category="Other" onclick="setCategory('Other')" title="Other">🧾</button>
                         </div>
+                        <input type="hidden" id="categoryInput" value="auto">
                     </div>
                     
-                    <!-- Row 5: Comment and Multiple dates (collapsible) -->
+                    <!-- Row 6: Comment and Multiple dates (collapsible) -->
                     <div class="form-group">
                         <div style="margin-top: 15px;">
                             <div style="text-align: center; margin-bottom: 15px;">
@@ -605,9 +637,9 @@
                         </div>
                     </div>
                     
-                    <div class="controls" style="margin-top: 20px;">
-                        <button type="submit" class="btn btn-primary" id="saveBtn">Save</button>
-                        <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
+                    <div class="controls" style="margin-top: 20px; display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary" id="saveBtn" style="flex: 1;">Save</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleForm()" style="flex: 1;">Cancel</button>
                         <button type="button" class="btn btn-danger hidden" id="deleteBtn" onclick="deleteTransaction()">🗑️ Delete</button>
                     </div>
                 </form>
@@ -646,14 +678,22 @@
             <div class="transaction-list hidden" id="ddTrackingContainer">
                 <div class="list-header">
                     <div class="list-title" id="ddTitle">Chart</div>
+                    <button class="btn btn-secondary" id="chartPeriodBtn"
+                            onclick="toggleChartPeriod()"
+                            style="flex: none; font-size: 12px; padding: 10px 12px;">
+                        6 months
+                    </button>
                 </div>
                 <div style="padding: 0;">
                     <div style="position: relative; width: 100%; height: 0; padding-bottom: 100%;">
+                        <div id="ddChartTooltip" style="display: none; position: fixed; z-index: 3000; pointer-events: none; background: rgba(35,35,45,0.95); color: white; padding: 7px 10px; border-radius: 7px; font-size: 12px; line-height: 1.3; white-space: nowrap; box-shadow: 0 3px 12px rgba(0,0,0,0.22); transform: translate(-50%, calc(-100% - 12px));"></div>
                         <canvas id="ddChart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></canvas>
                         <canvas id="incomeSpendingChart" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></canvas>
                     </div>
                 </div>
             </div>
+
+            <!-- Income vs Spending View removed - now part of DD tracking -->
         </div>
         
         <!-- Multi-Date Selector Modal -->
@@ -685,74 +725,30 @@
         let showingStatistics = false;
         let showingDDTracking = false;
         let showingIncomeSpending = false;
-        let moneyViewMode = 'incomeSpending'; 
-        let transactionType = 'expense'; 
+        let moneyViewMode = 'incomeSpending'; // 'debt', 'realMoney', 'incomeSpending' - start with Cashflow
+        let transactionType = 'expense'; // Default to expense
+        let isDDTransaction = false; // Track if DD (Débit Différé) is enabled
         let showingMyMoney = false;
+        let ddChartAnimationFrame = null;
+        let chartPeriod = '6months'; // '6months' or 'allTime'
+        let ddChartHoverHandlerAttached = false;
+        let ddChartResizeTimer = null;
         let chartInstance = null;
         let statsPeriod = 'thisMonth';
-        let chartTooltipEl = null;
 
-        function showChartTooltip(x, y, text) {
-            if (!chartTooltipEl) {
-                chartTooltipEl = document.createElement('div');
-                chartTooltipEl.style.position = 'fixed';
-                chartTooltipEl.style.background = 'rgba(0, 0, 0, 0.85)';
-                chartTooltipEl.style.color = '#fff';
-                chartTooltipEl.style.padding = '6px 10px';
-                chartTooltipEl.style.borderRadius = '6px';
-                chartTooltipEl.style.fontSize = '12px';
-                chartTooltipEl.style.fontWeight = 'bold';
-                chartTooltipEl.style.pointerEvents = 'none';
-                chartTooltipEl.style.zIndex = '3000';
-                chartTooltipEl.style.transition = 'opacity 0.15s ease';
-                document.body.appendChild(chartTooltipEl);
+        function toggleChartPeriod() {
+            chartPeriod = chartPeriod === '6months' ? 'allTime' : '6months';
+
+            const btn = document.getElementById('chartPeriodBtn');
+            if (btn) {
+                btn.textContent = chartPeriod === '6months' ? '6 months' : 'All time';
             }
-            chartTooltipEl.textContent = text;
-            chartTooltipEl.style.left = `${x}px`;
-            chartTooltipEl.style.top = `${y - 35}px`;
-            chartTooltipEl.style.opacity = '1';
-        }
 
-        function hideChartTooltip() {
-            if (chartTooltipEl) {
-                chartTooltipEl.style.opacity = '0';
+            if (moneyViewMode === 'incomeSpending') {
+                renderIncomeSpending();
+            } else if (moneyViewMode === 'debt' || moneyViewMode === 'realMoney') {
+                renderDDTracking();
             }
-        }
-
-        // Global Helper Functions for Safe Local Date Parsing
-        function parseLocalDate(dateStr) {
-            if (!dateStr) return new Date(NaN);
-            const str = dateStr.toString().trim();
-            const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-            if (match) {
-                return new Date(parseInt(match[1], 10), parseInt(match[2], 10) - 1, parseInt(match[3], 10));
-            }
-            return new Date(str);
-        }
-
-        function getMonthKeyFromStr(dateStr) {
-            if (!dateStr) return '';
-            const str = dateStr.toString().trim();
-            const match = str.match(/^(\d{4})-(\d{2})/);
-            if (match) {
-                return `${match[1]}-${match[2]}`;
-            }
-            const d = parseLocalDate(str);
-            if (!isNaN(d.getTime())) {
-                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            }
-            return '';
-        }
-
-        function getNextMonthKey(monthKey) {
-            const [year, month] = monthKey.split('-').map(Number);
-            const nextDate = new Date(year, month, 1);
-            return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
-        }
-
-        function isDDComment(comment) {
-            if (!comment) return false;
-            return /\bDD\b/i.test(comment.toString().trim());
         }
 
         function showCashflow() {
@@ -767,6 +763,7 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
+            // If already showing (button is 🏠), go home
             if (cashflowBtn.textContent === '🏠') {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
@@ -787,9 +784,14 @@
             ddContainer.classList.remove('hidden');
             
             title.textContent = 'Trends';
+            const chartPeriodBtn = document.getElementById('chartPeriodBtn');
+            if (chartPeriodBtn) {
+                chartPeriodBtn.textContent = chartPeriod === '6months' ? '6 months' : 'All time';
+            }
             ddCanvas.style.display = 'none';
             incomeSpendingCanvas.style.display = 'block';
             
+            // Update button states
             cashflowBtn.textContent = '🏠';
             debtBtn.textContent = '💀';
             realMoneyBtn.textContent = '💰';
@@ -815,6 +817,7 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
+            // If already showing (button is 🏠), go home
             if (debtBtn.textContent === '🏠') {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
@@ -834,10 +837,15 @@
             statsContainer.classList.add('hidden');
             ddContainer.classList.remove('hidden');
             
-            title.textContent = 'Debit differe';
+            title.textContent = 'Débit différé evolution';
+            const chartPeriodBtn = document.getElementById('chartPeriodBtn');
+            if (chartPeriodBtn) {
+                chartPeriodBtn.textContent = chartPeriod === '6months' ? '6 months' : 'All time';
+            }
             ddCanvas.style.display = 'block';
             incomeSpendingCanvas.style.display = 'none';
             
+            // Update button states
             cashflowBtn.textContent = '📈';
             debtBtn.textContent = '🏠';
             realMoneyBtn.textContent = '💰';
@@ -863,6 +871,7 @@
             const realMoneyBtn = document.getElementById('realMoneyBtn');
             const statsBtn = document.getElementById('statsBtn');
             
+            // If already showing (button is 🏠), go home
             if (realMoneyBtn.textContent === '🏠') {
                 listContainer.classList.remove('hidden');
                 statsContainer.classList.add('hidden');
@@ -883,9 +892,14 @@
             ddContainer.classList.remove('hidden');
             
             title.textContent = 'Real money evolution';
+            const chartPeriodBtn = document.getElementById('chartPeriodBtn');
+            if (chartPeriodBtn) {
+                chartPeriodBtn.textContent = chartPeriod === '6months' ? '6 months' : 'All time';
+            }
             ddCanvas.style.display = 'block';
             incomeSpendingCanvas.style.display = 'none';
             
+            // Update button states
             cashflowBtn.textContent = '📈';
             debtBtn.textContent = '💀';
             realMoneyBtn.textContent = '🏠';
@@ -899,12 +913,23 @@
             renderDDTracking();
         }
 
+
+        function setCategory(category) {
+            const input = document.getElementById('categoryInput');
+            if (input) input.value = category;
+
+            document.querySelectorAll('#categoryButtons .category-btn').forEach(button => {
+                button.classList.toggle('selected', button.dataset.category === category);
+            });
+        }
+
         function setTransactionType(type) {
             transactionType = type;
             const expenseBtn = document.getElementById('expenseBtn');
             const incomeBtn = document.getElementById('incomeBtn');
             
             if (type === 'expense') {
+                // Expense selected - red border filled, green border empty
                 expenseBtn.style.background = '#e74c3c';
                 expenseBtn.style.color = 'white';
                 expenseBtn.style.border = '2px solid #e74c3c';
@@ -912,12 +937,59 @@
                 incomeBtn.style.color = '#27ae60';
                 incomeBtn.style.border = '2px solid #27ae60';
             } else {
+                // Income selected - green border filled, red border empty
                 incomeBtn.style.background = '#27ae60';
                 incomeBtn.style.color = 'white';
                 incomeBtn.style.border = '2px solid #27ae60';
                 expenseBtn.style.background = 'white';
                 expenseBtn.style.color = '#e74c3c';
                 expenseBtn.style.border = '2px solid #e74c3c';
+            }
+        }
+
+        function toggleDD() {
+            isDDTransaction = !isDDTransaction;
+            const ddBtn = document.getElementById('ddBtn');
+            
+            if (isDDTransaction) {
+                // DD ON - black fill
+                ddBtn.style.background = '#000';
+                ddBtn.style.color = 'white';
+                ddBtn.title = 'DD (Deferred Debit) - ON';
+                
+                // Set date to 4th of next month (timezone safe)
+                const today = new Date();
+                let year = today.getFullYear();
+                let month = today.getMonth() + 2; // +2 because getMonth() is 0-indexed, and we want NEXT month
+                
+                // Handle year rollover (December -> January of next year)
+                if (month > 12) {
+                    month = month - 12;
+                    year = year + 1;
+                }
+                
+                const day = 4;
+                
+                // Format as YYYY-MM-DD
+                const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                document.getElementById('dateInput').value = dateString;
+                
+                // Set status to Expected
+                document.getElementById('statusInput').value = '⏳';
+                
+                // Add "DD" comment
+                document.getElementById('commentInput').value = 'DD';
+            } else {
+                // DD OFF - white with black border
+                ddBtn.style.background = 'white';
+                ddBtn.style.color = '#000';
+                ddBtn.title = 'DD (Deferred Debit) - OFF';
+                
+                // Clear DD comment when toggling off
+                const commentInput = document.getElementById('commentInput');
+                if (commentInput.value === 'DD') {
+                    commentInput.value = '';
+                }
             }
         }
 
@@ -943,46 +1015,72 @@
         }
 
         function renderDDTracking() {
-            const ddByMonth = {};
-            const realMoneyByMonth = {};
-
-            transactions.forEach(t => {
-                if (isDDComment(t.comment)) {
-                    const monthKey = getMonthKeyFromStr(t.date);
-                    if (monthKey) {
-                        ddByMonth[monthKey] = (ddByMonth[monthKey] || 0) + Math.abs(t.amount);
-                    }
-                }
-            });
-
+            // Determine which data to show
+            const dataType = showingMyMoney ? 'myMoney' : 'dd';
+            
+            // Default: 6 months ending one month ahead of the current month.
+            // Example: in August -> Apr, May, Jun, Jul, Aug, Sep.
+            // All time: every month from the earliest transaction through next month.
             const today = new Date();
-            today.setHours(0, 0, 0, 0);
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
 
-            // Generate 6 consecutive calendar months ending 1 month in the future
-            const monthsToShow = [];
-            for (let i = 4; i >= -1; i--) {
-                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                monthsToShow.push({
-                    monthKey: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
-                    label: d.toLocaleDateString('en-US', { month: 'short' }),
-                    year: d.getFullYear(),
-                    month: d.getMonth() + 1
-                });
+            let earliestMonthStart = new Date(currentMonthStart);
+
+            if (transactions.length > 0) {
+                const transactionDates = transactions
+                    .map(t => new Date(t.date))
+                    .filter(d => !isNaN(d.getTime()));
+
+                if (transactionDates.length > 0) {
+                    const earliestDate = new Date(Math.min(...transactionDates.map(d => d.getTime())));
+                    earliestMonthStart = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
+                }
             }
 
-            monthsToShow.forEach(mInfo => {
-                const monthKey = mInfo.monthKey;
-                const monthStart = new Date(mInfo.year, mInfo.month - 1, 1);
-                const monthEnd = new Date(mInfo.year, mInfo.month, 0);
+            const rangeStart = chartPeriod === 'allTime'
+                ? earliestMonthStart
+                : new Date(today.getFullYear(), today.getMonth() - 4, 1);
+
+            const monthsToShow = [];
+            for (let date = new Date(rangeStart); date <= nextMonthStart; date.setMonth(date.getMonth() + 1)) {
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthsToShow.push(monthKey);
+            }
+            
+            // Get DD transactions grouped by month (strict 'DD' comment match)
+            const ddByMonth = {};
+            const realMoneyByMonth = {};
+            
+            transactions.forEach(t => {
+                if (t.comment && t.comment.trim().toUpperCase() === 'DD') {
+                    const date = new Date(t.date);
+                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    if (!ddByMonth[monthKey]) {
+                        ddByMonth[monthKey] = 0;
+                    }
+                    ddByMonth[monthKey] += Math.abs(t.amount);
+                }
+            });
+            
+            // Use all months from the earliest transaction through next month.
+            const sortedMonths = monthsToShow;
+            today.setHours(0, 0, 0, 0);
+            
+            sortedMonths.forEach(monthKey => {
+                const [year, month] = monthKey.split('-');
+                const monthStart = new Date(year, month - 1, 1);
+                const monthEnd = new Date(year, month, 0);
                 
-                const currentMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-                const cutoffDate = (monthKey === currentMonthKey) ? today : monthEnd;
+                const currentMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+                const cutoffDate = (monthKey === currentMonth) ? today : monthEnd;
                 
                 let balance = 0;
                 let salaryInMonth = 0;
                 
                 transactions.forEach(t => {
-                    const tDate = parseLocalDate(t.date);
+                    const tDate = new Date(t.date);
                     if (tDate <= cutoffDate && t.status === '✅') {
                         balance += t.amount;
                         if (tDate >= monthStart && tDate <= cutoffDate && t.amount > 0) {
@@ -998,7 +1096,8 @@
                 let nextMonthServices = 0;
                 
                 transactions.forEach(t => {
-                    const tMonthKey = getMonthKeyFromStr(t.date);
+                    const tDate = new Date(t.date);
+                    const tMonthKey = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
                     if (tMonthKey === nextMonthKey) {
                         const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
                         if (category === 'Living') nextMonthLiving += t.amount;
@@ -1009,277 +1108,797 @@
                 realMoneyByMonth[monthKey] = balance + nextMonthDD + nextMonthLiving + nextMonthServices - salaryInMonth;
             });
             
-            const amounts = showingMyMoney 
-                ? monthsToShow.map(m => realMoneyByMonth[m.monthKey] || 0) 
-                : monthsToShow.map(m => ddByMonth[m.monthKey] || 0);
-                
-            const labels = monthsToShow.map(m => m.label);
+            const amounts = showingMyMoney
+                ? sortedMonths.map(m => realMoneyByMonth[m] || 0)
+                : sortedMonths.map(m => ddByMonth[m] || 0);
+            const labels = sortedMonths.map((m, index) => {
+                const [year, month] = m.split('-').map(Number);
+                const date = new Date(year, month - 1, 1);
+                const previous = index > 0 ? sortedMonths[index - 1].split('-').map(Number) : null;
+                const sameYearAsPrevious = !previous || previous[0] === year;
+                return sameYearAsPrevious
+                    ? date.toLocaleDateString('en-US', { month: 'short' })
+                    : date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            });
             
+            // Setup canvas for high DPI
             const canvas = document.getElementById('ddChart');
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
             const rect = canvas.getBoundingClientRect();
-            
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            
+
+            if (ddChartAnimationFrame) {
+                cancelAnimationFrame(ddChartAnimationFrame);
+                ddChartAnimationFrame = null;
+            }
+
+            canvas.width = Math.max(1, Math.round(rect.width * dpr));
+            canvas.height = Math.max(1, Math.round(rect.height * dpr));
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
             const width = rect.width;
             const height = rect.height;
-            ctx.clearRect(0, 0, width, height);
-            
-            const paddingLeft = 60;
-            const paddingRight = 20;
-            const paddingTop = 20;
-            const paddingBottom = 50;
-            const chartWidth = width - paddingLeft - paddingRight;
-            const chartHeight = height - paddingTop - paddingBottom;
-            
-            const rawMax = Math.max(...amounts.map(Math.abs), 100);
-            const maxAmount = Math.ceil(rawMax / 100) * 100;
-            const rawMin = showingMyMoney ? Math.min(0, ...amounts) : 0;
-            const minAmount = Math.floor(rawMin / 100) * 100;
-            const range = (maxAmount - minAmount) || 1;
-            
+
+            if (amounts.length === 0 || width <= 0 || height <= 0) {
+                ctx.clearRect(0, 0, width, height);
+                ctx.font = '16px sans-serif';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('No data available', width / 2, height / 2);
+                return;
+            }
+
+            const paddingLeft = 62;
+            const paddingRight = 24;
+            const paddingTop = 42;
+            const paddingBottom = 52;
+            const chartWidth = Math.max(1, width - paddingLeft - paddingRight);
+            const chartHeight = Math.max(1, height - paddingTop - paddingBottom);
+
+            // Keep the Y-axis readable, including negative Real Money values.
+            const rawMax = Math.max(...amounts, 0);
+            const rawMin = showingMyMoney ? Math.min(...amounts, 0) : 0;
+            const maxAmount = Math.max(100, Math.ceil(rawMax / 100) * 100);
+            const minAmount = showingMyMoney ? Math.floor(rawMin / 100) * 100 : 0;
+            const range = Math.max(100, maxAmount - minAmount);
+
             let stepSize = 200;
             if (range > 2000) stepSize = 500;
             if (range > 5000) stepSize = 1000;
-            
-            for (let value = minAmount; value <= maxAmount; value += stepSize) {
-                const y = height - paddingBottom - ((value - minAmount) / range) * chartHeight;
-                ctx.strokeStyle = '#f0f0f0';
+            if (range / stepSize > 8) stepSize *= 2;
+
+            const getY = (value) => {
+                return height - paddingBottom -
+                    ((value - minAmount) / range) * chartHeight;
+            };
+
+            const minVal = Math.min(...amounts);
+            const maxVal = Math.max(...amounts);
+
+            const getColor = (value, alpha = 1) => {
+                if (showingMyMoney) {
+                    return value >= 0
+                        ? `rgba(39, 174, 96, ${alpha})`
+                        : `rgba(231, 76, 60, ${alpha})`;
+                }
+
+                const normalized = maxVal === minVal
+                    ? 0.5
+                    : (value - minVal) / (maxVal - minVal);
+
+                const r = Math.round(52 + normalized * (231 - 52));
+                const g = Math.round(152 - normalized * (152 - 76));
+                const b = Math.round(219 - normalized * (219 - 60));
+
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            };
+
+            const points = amounts.map((value, i) => ({
+                x: paddingLeft + (chartWidth / Math.max(1, amounts.length - 1)) * i,
+                y: getY(value),
+                value,
+                label: labels[i]
+            }));
+
+            // Draw the same smooth cardinal/Bézier curve as before,
+            // but allow it to be progressively revealed during animation.
+            const drawSmoothPath = (progress = 1) => {
                 ctx.beginPath();
-                ctx.moveTo(paddingLeft, y);
-                ctx.lineTo(width - paddingRight, y);
-                ctx.stroke();
-                
-                ctx.fillStyle = '#999';
-                ctx.font = '12px sans-serif';
+                ctx.moveTo(points[0].x, points[0].y);
+
+                if (points.length === 1) return;
+
+                if (points.length === 2) {
+                    const t = Math.min(1, progress);
+                    const x = points[0].x + (points[1].x - points[0].x) * t;
+                    const y = points[0].y + (points[1].y - points[0].y) * t;
+                    ctx.lineTo(x, y);
+                    return;
+                }
+
+                const segmentCount = points.length - 1;
+                const scaled = Math.min(segmentCount, Math.max(0, progress * segmentCount));
+                const completedSegments = Math.floor(scaled);
+                const segmentProgress = scaled - completedSegments;
+
+                const drawSegment = (i, t = 1) => {
+                    const p0 = points[Math.max(0, i - 1)];
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const p3 = points[Math.min(points.length - 1, i + 2)];
+
+                    const tension = 0.5;
+                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
+
+                    if (t >= 1) {
+                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                        return { x: p2.x, y: p2.y };
+                    }
+
+                    const mt = 1 - t;
+                    const x =
+                        mt ** 3 * p1.x +
+                        3 * mt ** 2 * t * cp1x +
+                        3 * mt * t ** 2 * cp2x +
+                        t ** 3 * p2.x;
+                    const y =
+                        mt ** 3 * p1.y +
+                        3 * mt ** 2 * t * cp1y +
+                        3 * mt * t ** 2 * cp2y +
+                        t ** 3 * p2.y;
+
+                    // A short cubic approximation gives a visually smooth
+                    // animated endpoint without changing the final curve.
+                    ctx.bezierCurveTo(
+                        p1.x + (cp1x - p1.x) * t,
+                        p1.y + (cp1y - p1.y) * t,
+                        cp1x + (cp2x - cp1x) * t,
+                        cp1y + (cp2y - cp1y) * t,
+                        x,
+                        y
+                    );
+
+                    return { x, y };
+                };
+
+                for (let i = 0; i < completedSegments; i++) {
+                    drawSegment(i, 1);
+                }
+
+                if (completedSegments < segmentCount) {
+                    drawSegment(completedSegments, segmentProgress);
+                }
+            };
+
+            const drawChart = (progress = 1) => {
+                ctx.clearRect(0, 0, width, height);
+
+                // -----------------------------
+                // Grid
+                // -----------------------------
+                ctx.save();
+                ctx.strokeStyle = '#eeeeee';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 4]);
+
+                for (
+                    let value = minAmount;
+                    value <= maxAmount + stepSize * 0.001;
+                    value += stepSize
+                ) {
+                    const y = getY(value);
+                    ctx.beginPath();
+                    ctx.moveTo(paddingLeft, y);
+                    ctx.lineTo(width - paddingRight, y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                // -----------------------------
+                // Y-axis labels
+                // -----------------------------
+                ctx.fillStyle = '#888';
+                ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText('€' + value.toFixed(0), paddingLeft - 10, y + 4);
-            }
-            
-            const getY = (value) => height - paddingBottom - ((value - minAmount) / range) * chartHeight;
-            
-            const ddPoints = [];
-            const xStep = chartWidth / (monthsToShow.length - 1);
-            for (let i = 0; i < amounts.length; i++) {
-                const x = paddingLeft + i * xStep;
-                const y = getY(amounts[i]);
-                ddPoints.push({ x, y, value: amounts[i], label: labels[i] });
-            }
-            
-            const gradient = ctx.createLinearGradient(0, height - paddingBottom, 0, paddingTop);
-            gradient.addColorStop(0, 'rgba(102, 126, 234, 0.1)');
-            gradient.addColorStop(1, 'rgba(102, 126, 234, 0.4)');
-            
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.moveTo(ddPoints[0].x, height - paddingBottom);
-            ddPoints.forEach(p => ctx.lineTo(p.x, p.y));
-            ctx.lineTo(ddPoints[ddPoints.length - 1].x, height - paddingBottom);
-            ctx.closePath();
-            ctx.fill();
+                ctx.textBaseline = 'middle';
 
-            ctx.lineWidth = 3;
-            ctx.strokeStyle = '#667eea';
-            ctx.beginPath();
-            ddPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-            ctx.stroke();
+                for (
+                    let value = minAmount;
+                    value <= maxAmount + stepSize * 0.001;
+                    value += stepSize
+                ) {
+                    ctx.fillText('€' + Math.round(value), paddingLeft - 10, getY(value));
+                }
 
-            ddPoints.forEach((point) => {
-                ctx.fillStyle = '#667eea';
+                // -----------------------------
+                // Axes
+                // -----------------------------
+                ctx.strokeStyle = '#d9d9d9';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([]);
                 ctx.beginPath();
-                ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                ctx.beginPath();
-                ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
-                ctx.fill();
-            });
+                ctx.moveTo(paddingLeft, paddingTop);
+                ctx.lineTo(paddingLeft, height - paddingBottom);
+                ctx.lineTo(width - paddingRight, height - paddingBottom);
+                ctx.stroke();
 
-            ddPoints.forEach((point) => {
+                // Zero line for Real Money.
+                if (showingMyMoney && minAmount < 0 && maxAmount > 0) {
+                    ctx.save();
+                    ctx.strokeStyle = '#bdbdbd';
+                    ctx.setLineDash([5, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(paddingLeft, getY(0));
+                    ctx.lineTo(width - paddingRight, getY(0));
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // -----------------------------
+                // Filled area
+                // -----------------------------
+                ctx.save();
+
+                const gradient = ctx.createLinearGradient(
+                    0,
+                    paddingTop,
+                    0,
+                    height - paddingBottom
+                );
+
+                if (showingMyMoney) {
+                    gradient.addColorStop(0, 'rgba(26, 188, 156, 0.28)');
+                    gradient.addColorStop(0.5, 'rgba(52, 152, 219, 0.14)');
+                    gradient.addColorStop(1, 'rgba(155, 89, 182, 0.04)');
+                } else {
+                    gradient.addColorStop(0, getColor(maxVal, 0.28));
+                    gradient.addColorStop(1, getColor(minVal, 0.04));
+                }
+
+                drawSmoothPath(progress);
+
+                const currentX =
+                    points[0].x +
+                    (points[points.length - 1].x - points[0].x) * progress;
+
+                ctx.lineTo(currentX, height - paddingBottom);
+                ctx.lineTo(points[0].x, height - paddingBottom);
+                ctx.closePath();
+
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.restore();
+
+                // -----------------------------
+                // Main line
+                // -----------------------------
+                ctx.save();
+
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                const lineGradient = ctx.createLinearGradient(
+                    0,
+                    paddingTop,
+                    0,
+                    height - paddingBottom
+                );
+
+                if (showingMyMoney) {
+                    lineGradient.addColorStop(0, '#1abc9c');
+                    lineGradient.addColorStop(0.5, '#3498db');
+                    lineGradient.addColorStop(1, '#9b59b6');
+                } else {
+                    lineGradient.addColorStop(0, getColor(maxVal, 1));
+                    lineGradient.addColorStop(1, getColor(minVal, 1));
+                }
+
+                ctx.strokeStyle = lineGradient;
+                drawSmoothPath(progress);
+                ctx.stroke();
+                ctx.restore();
+
+                // -----------------------------
+                // Data point markers
+                // -----------------------------
+                const visiblePointCount = Math.max(
+                    1,
+                    Math.ceil(progress * points.length)
+                );
+
+                points.slice(0, visiblePointCount).forEach(point => {
+                    // White halo makes markers readable over the line/area.
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = getColor(point.value, 1);
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // -----------------------------
+                // Month labels
+                // -----------------------------
                 ctx.fillStyle = '#666';
-                ctx.font = '12px sans-serif';
+                ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
                 ctx.textAlign = 'center';
-                ctx.fillText(point.label, point.x, height - paddingBottom + 20);
-            });
+                ctx.textBaseline = 'alphabetic';
 
-            canvas.onmousemove = function (e) {
-                const cRect = canvas.getBoundingClientRect();
-                const mouseX = e.clientX - cRect.left;
-                const mouseY = e.clientY - cRect.top;
-                
-                let found = false;
-                ddPoints.forEach(p => {
-                    const dist = Math.hypot(p.x - mouseX, p.y - mouseY);
-                    if (dist < 12) {
-                        const titleText = showingMyMoney ? 'Real money' : 'Debit differe';
-                        showChartTooltip(e.clientX, e.clientY, `${titleText} (${p.label}): €${p.value.toFixed(2)}`);
-                        found = true;
+                points.forEach(point => {
+                    ctx.fillText(
+                        point.label,
+                        point.x,
+                        height - paddingBottom + 22
+                    );
+                });
+
+            };
+
+            // Store chart geometry for hover handling.
+            canvas._ddChartPoints = points;
+
+            // Use a real HTML tooltip instead of canvas.title. Browser-native
+            // title tooltips are delayed/unreliable for interactive canvas charts.
+            if (!ddChartHoverHandlerAttached) {
+                const tooltip = document.getElementById('ddChartTooltip');
+
+                canvas.addEventListener('mousemove', function(event) {
+                    const currentPoints = canvas._ddChartPoints || [];
+                    if (!currentPoints.length || !tooltip) return;
+
+                    const rectNow = canvas.getBoundingClientRect();
+                    const mouseX = event.clientX - rectNow.left;
+                    const mouseY = event.clientY - rectNow.top;
+
+                    let closest = null;
+                    let closestDistance = Infinity;
+
+                    currentPoints.forEach(point => {
+                        const distance = Math.hypot(
+                            mouseX - point.x,
+                            mouseY - point.y
+                        );
+
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closest = point;
+                        }
+                    });
+
+                    if (closest && closestDistance <= 24) {
+                        canvas.style.cursor = 'pointer';
+                        tooltip.innerHTML = `<strong>${closest.label}</strong><br>€${closest.value.toFixed(2)}`;
+                        tooltip.style.left = `${event.clientX}px`;
+                        tooltip.style.top = `${event.clientY}px`;
+                        tooltip.style.display = 'block';
+                    } else {
+                        canvas.style.cursor = 'default';
+                        tooltip.style.display = 'none';
                     }
                 });
-                if (!found) hideChartTooltip();
+
+                canvas.addEventListener('mouseleave', function() {
+                    canvas.style.cursor = 'default';
+                    if (tooltip) tooltip.style.display = 'none';
+                });
+
+                ddChartHoverHandlerAttached = true;
+            }
+
+            // -----------------------------
+            // Smooth load animation
+            // -----------------------------
+            const animationDuration = 650;
+            const animationStart = performance.now();
+
+            const easeOutCubic = t =>
+                1 - Math.pow(1 - t, 3);
+
+            const animate = now => {
+                const progress = Math.min(
+                    1,
+                    (now - animationStart) / animationDuration
+                );
+
+                drawChart(easeOutCubic(progress));
+
+                if (progress < 1) {
+                    ddChartAnimationFrame =
+                        requestAnimationFrame(animate);
+                } else {
+                    ddChartAnimationFrame = null;
+                }
             };
-            canvas.onmouseleave = hideChartTooltip;
+
+            ddChartAnimationFrame =
+                requestAnimationFrame(animate);
+        }
+
+                function getNextMonthKey(monthKey) {
+            const [year, month] = monthKey.split('-');
+            const nextDate = new Date(year, month, 1);
+            return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
         }
 
         function renderIncomeSpending() {
             const canvas = document.getElementById('incomeSpendingChart');
             const ctx = canvas.getContext('2d');
             const dpr = window.devicePixelRatio || 1;
-            
-            const container = canvas.parentElement;
-            const size = container.offsetWidth;
-            
-            canvas.width = size * dpr;
-            canvas.height = size * dpr;
-            ctx.scale(dpr, dpr);
-            ctx.clearRect(0, 0, size, size);
-            
+            const rect = canvas.getBoundingClientRect();
+
+            if (ddChartAnimationFrame) {
+                cancelAnimationFrame(ddChartAnimationFrame);
+                ddChartAnimationFrame = null;
+            }
+
+            canvas.width = Math.max(1, Math.round(rect.width * dpr));
+            canvas.height = Math.max(1, Math.round(rect.height * dpr));
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const width = rect.width;
+            const height = rect.height;
+
+            if (width <= 0 || height <= 0) return;
+
+            // Exactly the same chart geometry as Debt / Real Money.
+            const paddingLeft = 62;
+            const paddingRight = 24;
+            const paddingTop = 42;
+            const paddingBottom = 52;
+            const chartWidth = Math.max(1, width - paddingLeft - paddingRight);
+            const chartHeight = Math.max(1, height - paddingTop - paddingBottom);
+
+            // Default: 6 months ending one month ahead of the current month.
+            // Example: in August -> Apr, May, Jun, Jul, Aug, Sep.
+            // All time: every month from the earliest transaction through next month.
             const today = new Date();
+            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            const nextMonthStart = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+            let earliestMonthStart = new Date(currentMonthStart);
+
+            if (transactions.length > 0) {
+                const transactionDates = transactions
+                    .map(t => new Date(t.date))
+                    .filter(d => !isNaN(d.getTime()));
+
+                if (transactionDates.length > 0) {
+                    const earliestDate = new Date(Math.min(...transactionDates.map(d => d.getTime())));
+                    earliestMonthStart = new Date(earliestDate.getFullYear(), earliestDate.getMonth(), 1);
+                }
+            }
+
+            const rangeStart = chartPeriod === 'allTime'
+                ? earliestMonthStart
+                : new Date(today.getFullYear(), today.getMonth() - 4, 1);
+
             const monthsToShow = [];
-            for (let i = 4; i >= -1; i--) {
-                const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            for (let date = new Date(rangeStart); date <= nextMonthStart; date.setMonth(date.getMonth() + 1)) {
+                const monthDate = new Date(date);
                 monthsToShow.push({
-                    year: d.getFullYear(),
-                    month: d.getMonth(),
-                    name: d.toLocaleDateString('en-US', { month: 'short' })
+                    year: monthDate.getFullYear(),
+                    month: monthDate.getMonth(),
+                    name: monthDate.toLocaleDateString('en-US', { month: 'short' })
                 });
             }
-            
-            const monthlyData = monthsToShow.map(mInfo => {
+
+            // Make month labels year-aware when crossing year boundary
+            monthsToShow.forEach((item, index) => {
+                if (index > 0 && item.year !== monthsToShow[index - 1].year) {
+                    const date = new Date(item.year, item.month, 1);
+                    item.name = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+                }
+            });
+
+            // Preserve existing Trends calculation: include completed and expected transactions.
+            const monthlyData = monthsToShow.map(monthInfo => {
                 let income = 0;
                 let spending = 0;
-                
+
                 transactions.forEach(t => {
-                    const mKey = getMonthKeyFromStr(t.date);
-                    if (mKey) {
-                        const [tYear, tMonth1] = mKey.split('-').map(Number);
-                        const tMonth = tMonth1 - 1;
-                        if (tMonth === mInfo.month && tYear === mInfo.year) {
-                            if (t.amount > 0) {
-                                income += t.amount;
-                            } else {
-                                spending += Math.abs(t.amount);
-                            }
+                    const tDate = new Date(t.date);
+                    if (tDate.getMonth() === monthInfo.month && tDate.getFullYear() === monthInfo.year) {
+                        if (t.amount > 0) {
+                            income += t.amount;
+                        } else {
+                            spending += Math.abs(t.amount);
                         }
                     }
                 });
-                
-                return { month: mInfo.name, income, spending };
+
+                return {
+                    month: monthInfo.name,
+                    income,
+                    spending
+                };
             });
-            
-            const paddingLeft = 60;
-            const paddingRight = 20;
-            const paddingTop = 20;
-            const paddingBottom = 50;
-            const chartWidth = size - paddingLeft - paddingRight;
-            const chartHeight = size - paddingTop - paddingBottom;
-            
-            const maxValue = Math.max(...monthlyData.map(d => Math.max(d.income, d.spending)), 100);
-            let yMax = Math.ceil(maxValue / 100) * 100;
-            
-            let yStep = yMax <= 1000 ? 200 : (yMax <= 2500 ? 500 : 1000);
-            yMax = Math.ceil(maxValue / yStep) * yStep;
-            
-            const ySteps = yMax / yStep;
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 1;
-            ctx.fillStyle = '#999';
-            ctx.font = '12px sans-serif';
-            ctx.textAlign = 'right';
-            
-            for (let i = 0; i <= ySteps; i++) {
-                const y = paddingTop + chartHeight - (i / ySteps) * chartHeight;
-                ctx.beginPath();
-                ctx.moveTo(paddingLeft, y);
-                ctx.lineTo(paddingLeft + chartWidth, y);
-                ctx.stroke();
-                ctx.fillText('€' + (i * yStep), paddingLeft - 10, y + 4);
+
+            const maxValue = Math.max(
+                ...monthlyData.map(d => Math.max(d.income, d.spending)),
+                100
+            );
+
+            let yStep;
+            if (maxValue <= 1000) {
+                yStep = 200;
+            } else if (maxValue <= 2500) {
+                yStep = 500;
+            } else {
+                yStep = 1000;
             }
-            
-            const incomePoints = [];
-            const spendingPoints = [];
-            const xStep = chartWidth / (monthlyData.length - 1);
-            
-            monthlyData.forEach((data, index) => {
-                const x = paddingLeft + index * xStep;
-                const incomeY = paddingTop + chartHeight - (data.income / yMax) * chartHeight;
-                const spendingY = paddingTop + chartHeight - (data.spending / yMax) * chartHeight;
-                
-                incomePoints.push({ x, y: incomeY, val: data.income, label: data.month });
-                spendingPoints.push({ x, y: spendingY, val: data.spending, label: data.month });
-            });
-            
-            ctx.strokeStyle = '#27ae60';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            incomePoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-            ctx.stroke();
-            
-            incomePoints.forEach(p => {
-                ctx.fillStyle = '#27ae60';
+
+            const yMax = Math.ceil(maxValue / yStep) * yStep;
+            const ySteps = Math.max(1, yMax / yStep);
+            const getY = value =>
+                height - paddingBottom - (value / yMax) * chartHeight;
+
+            const xStep = chartWidth / Math.max(1, monthlyData.length - 1);
+            const incomePoints = monthlyData.map((data, index) => ({
+                x: paddingLeft + index * xStep,
+                y: getY(data.income),
+                value: data.income,
+                label: data.month
+            }));
+            const spendingPoints = monthlyData.map((data, index) => ({
+                x: paddingLeft + index * xStep,
+                y: getY(data.spending),
+                value: data.spending,
+                label: data.month
+            }));
+
+            const drawSmoothPath = (points, progress = 1) => {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-                ctx.fill();
-            });
+                ctx.moveTo(points[0].x, points[0].y);
 
-            ctx.strokeStyle = '#e74c3c';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath();
-            spendingPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
-            ctx.stroke();
-            
-            spendingPoints.forEach(p => {
-                ctx.fillStyle = '#e74c3c';
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
-                ctx.fill();
-            });
+                if (points.length === 1) return;
 
-            ctx.fillStyle = '#666';
-            ctx.textAlign = 'center';
-            ctx.font = '13px sans-serif';
-            monthlyData.forEach((data, index) => {
-                const x = paddingLeft + index * xStep;
-                ctx.fillText(data.month, x, size - paddingBottom + 25);
-            });
+                if (points.length === 2) {
+                    const t = Math.min(1, progress);
+                    ctx.lineTo(
+                        points[0].x + (points[1].x - points[0].x) * t,
+                        points[0].y + (points[1].y - points[0].y) * t
+                    );
+                    return;
+                }
 
-            canvas.onmousemove = function (e) {
-                const cRect = canvas.getBoundingClientRect();
-                const mouseX = e.clientX - cRect.left;
-                const mouseY = e.clientY - cRect.top;
-                
-                let found = false;
-                incomePoints.forEach(p => {
-                    if (Math.hypot(p.x - mouseX, p.y - mouseY) < 10) {
-                        showChartTooltip(e.clientX, e.clientY, `Income (${p.label}): €${p.val.toFixed(2)}`);
-                        found = true;
+                const segmentCount = points.length - 1;
+                const scaled = Math.min(segmentCount, Math.max(0, progress * segmentCount));
+                const completedSegments = Math.floor(scaled);
+                const segmentProgress = scaled - completedSegments;
+
+                const drawSegment = (i, t = 1) => {
+                    const p0 = points[Math.max(0, i - 1)];
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    const p3 = points[Math.min(points.length - 1, i + 2)];
+                    const tension = 0.5;
+
+                    const cp1x = p1.x + (p2.x - p0.x) / 6 * tension;
+                    const cp1y = p1.y + (p2.y - p0.y) / 6 * tension;
+                    const cp2x = p2.x - (p3.x - p1.x) / 6 * tension;
+                    const cp2y = p2.y - (p3.y - p1.y) / 6 * tension;
+
+                    if (t >= 1) {
+                        ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2.x, p2.y);
+                        return;
                     }
-                });
-                spendingPoints.forEach(p => {
-                    if (Math.hypot(p.x - mouseX, p.y - mouseY) < 10) {
-                        showChartTooltip(e.clientX, e.clientY, `Spending (${p.label}): €${p.val.toFixed(2)}`);
-                        found = true;
-                    }
-                });
-                if (!found) hideChartTooltip();
+
+                    const mt = 1 - t;
+                    const x = mt ** 3 * p1.x +
+                        3 * mt ** 2 * t * cp1x +
+                        3 * mt * t ** 2 * cp2x +
+                        t ** 3 * p2.x;
+                    const y = mt ** 3 * p1.y +
+                        3 * mt ** 2 * t * cp1y +
+                        3 * mt * t ** 2 * cp2y +
+                        t ** 3 * p2.y;
+
+                    ctx.bezierCurveTo(
+                        p1.x + (cp1x - p1.x) * t,
+                        p1.y + (cp1y - p1.y) * t,
+                        cp1x + (cp2x - cp1x) * t,
+                        cp1y + (cp2y - cp1y) * t,
+                        x,
+                        y
+                    );
+                };
+
+                for (let i = 0; i < completedSegments; i++) {
+                    drawSegment(i, 1);
+                }
+                if (completedSegments < segmentCount) {
+                    drawSegment(completedSegments, segmentProgress);
+                }
             };
-            canvas.onmouseleave = hideChartTooltip;
+
+            const drawChart = progress => {
+                ctx.clearRect(0, 0, width, height);
+
+                // Same grid and Y-axis typography as Debt / Real Money.
+                ctx.save();
+                ctx.strokeStyle = '#eeeeee';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([3, 4]);
+                for (let i = 0; i <= ySteps; i++) {
+                    const value = i * yStep;
+                    const y = getY(value);
+                    ctx.beginPath();
+                    ctx.moveTo(paddingLeft, y);
+                    ctx.lineTo(width - paddingRight, y);
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                ctx.fillStyle = '#888';
+                ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+                for (let i = 0; i <= ySteps; i++) {
+                    const value = i * yStep;
+                    ctx.fillText('€' + Math.round(value), paddingLeft - 10, getY(value));
+                }
+
+                // Same axes.
+                ctx.strokeStyle = '#d9d9d9';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                ctx.moveTo(paddingLeft, paddingTop);
+                ctx.lineTo(paddingLeft, height - paddingBottom);
+                ctx.lineTo(width - paddingRight, height - paddingBottom);
+                ctx.stroke();
+
+                // Income area and line.
+                const incomeGradient = ctx.createLinearGradient(0, paddingTop, 0, height - paddingBottom);
+                incomeGradient.addColorStop(0, 'rgba(39, 174, 96, 0.28)');
+                incomeGradient.addColorStop(1, 'rgba(39, 174, 96, 0.04)');
+
+                ctx.save();
+                drawSmoothPath(incomePoints, progress);
+                const incomeCurrentX = incomePoints[0].x +
+                    (incomePoints[incomePoints.length - 1].x - incomePoints[0].x) * progress;
+                ctx.lineTo(incomeCurrentX, height - paddingBottom);
+                ctx.lineTo(incomePoints[0].x, height - paddingBottom);
+                ctx.closePath();
+                ctx.fillStyle = incomeGradient;
+                ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.strokeStyle = '#27ae60';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                drawSmoothPath(incomePoints, progress);
+                ctx.stroke();
+                ctx.restore();
+
+                // Spending area and line.
+                const spendingGradient = ctx.createLinearGradient(0, paddingTop, 0, height - paddingBottom);
+                spendingGradient.addColorStop(0, 'rgba(231, 76, 60, 0.28)');
+                spendingGradient.addColorStop(1, 'rgba(231, 76, 60, 0.04)');
+
+                ctx.save();
+                drawSmoothPath(spendingPoints, progress);
+                const spendingCurrentX = spendingPoints[0].x +
+                    (spendingPoints[spendingPoints.length - 1].x - spendingPoints[0].x) * progress;
+                ctx.lineTo(spendingCurrentX, height - paddingBottom);
+                ctx.lineTo(spendingPoints[0].x, height - paddingBottom);
+                ctx.closePath();
+                ctx.fillStyle = spendingGradient;
+                ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 3;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                drawSmoothPath(spendingPoints, progress);
+                ctx.stroke();
+                ctx.restore();
+
+                // Same month-label typography and placement.
+                ctx.fillStyle = '#666';
+                ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'alphabetic';
+                monthlyData.forEach((data, index) => {
+                    ctx.fillText(data.month, paddingLeft + index * xStep, height - paddingBottom + 22);
+                });
+            };
+
+            // Hover both Trends series using the same tooltip system.
+            canvas._incomeSpendingPoints = [
+                ...incomePoints.map(p => ({ ...p, series: 'Income', color: '#27ae60' })),
+                ...spendingPoints.map(p => ({ ...p, series: 'Spending', color: '#e74c3c' }))
+            ];
+
+            const tooltip = document.getElementById('ddChartTooltip');
+            if (!canvas._incomeSpendingHoverAttached) {
+                canvas.addEventListener('mousemove', event => {
+                    const allPoints = canvas._incomeSpendingPoints || [];
+                    if (!allPoints.length || !tooltip) return;
+
+                    const rectNow = canvas.getBoundingClientRect();
+                    const mouseX = event.clientX - rectNow.left;
+                    const mouseY = event.clientY - rectNow.top;
+
+                    let closest = null;
+                    let closestDistance = Infinity;
+                    allPoints.forEach(point => {
+                        const distance = Math.hypot(mouseX - point.x, mouseY - point.y);
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closest = point;
+                        }
+                    });
+
+                    if (closest && closestDistance <= 24) {
+                        const sameMonth = allPoints.filter(p => p.label === closest.label);
+                        tooltip.innerHTML = sameMonth
+                            .map(p => `<strong style="color:${p.color}">${p.series}</strong>: €${p.value.toFixed(2)}`)
+                            .join('<br>');
+                        tooltip.style.left = `${event.clientX}px`;
+                        tooltip.style.top = `${event.clientY}px`;
+                        tooltip.style.display = 'block';
+                        canvas.style.cursor = 'pointer';
+                    } else {
+                        tooltip.style.display = 'none';
+                        canvas.style.cursor = 'default';
+                    }
+                });
+
+                canvas.addEventListener('mouseleave', () => {
+                    if (tooltip) tooltip.style.display = 'none';
+                    canvas.style.cursor = 'default';
+                });
+
+                canvas._incomeSpendingHoverAttached = true;
+            }
+
+            const animationDuration = 650;
+            const animationStart = performance.now();
+            const easeOutCubic = t => 1 - Math.pow(1 - t, 3);
+
+            const animate = now => {
+                const progress = Math.min(1, (now - animationStart) / animationDuration);
+                drawChart(easeOutCubic(progress));
+                if (progress < 1) {
+                    ddChartAnimationFrame = requestAnimationFrame(animate);
+                } else {
+                    ddChartAnimationFrame = null;
+                }
+            };
+
+            ddChartAnimationFrame = requestAnimationFrame(animate);
         }
 
         function categorizeTransaction(event, amount, comment, savedCategory) {
+            // If there's a manually saved category in the sheet, use it
             if (savedCategory && savedCategory !== 'auto' && savedCategory !== '') {
                 return savedCategory;
             }
             
             const eventLower = event.toLowerCase();
             
+            // Income
             if (amount > 0) {
                 return 'Income';
             }
             
+            // NOTE: We no longer assign "Débit différé" as a category
+            // DD transactions are identified by comment "DD" for calculations only
+            // They should be categorized by their actual expense type (Living, Services, etc.)
+            
+            // Well-being: spa, massage, hair, beauty, gym, sports
             if (eventLower.includes('spa') || 
                 eventLower.includes('massage') ||
                 eventLower.includes('hair') ||
@@ -1292,6 +1911,7 @@
                 return 'Well-being';
             }
             
+            // Pets - guinea pigs and pet-related
             if (eventLower.includes('guinea') || 
                 eventLower.includes('pet') ||
                 eventLower.includes('cochon') ||
@@ -1301,6 +1921,7 @@
                 return 'Pets';
             }
             
+            // Living: Rent, utilities, internet, phone, transport
             if (eventLower.includes('rent') || 
                 eventLower.includes('fibre') || 
                 eventLower.includes('sosh') || 
@@ -1313,6 +1934,7 @@
                 return 'Living';
             }
             
+            // Food: Groceries, canteen, restaurants
             if (eventLower.includes('groceries') || 
                 eventLower.includes('grocer') ||
                 eventLower.includes('lidl') ||
@@ -1325,6 +1947,7 @@
                 return 'Food';
             }
             
+            // Social: Bars, restaurants, entertainment, cinema, tobacco
             if (eventLower.includes('bar') || 
                 eventLower.includes('restaurant') ||
                 eventLower.includes('resto') ||
@@ -1340,6 +1963,7 @@
                 return 'Social';
             }
             
+            // Services: Subscriptions, insurance, bank fees
             if (eventLower.includes('subscription') || 
                 eventLower.includes('insurance') || 
                 eventLower.includes('assurance') ||
@@ -1354,6 +1978,7 @@
                 return 'Services';
             }
             
+            // Other: Everything else
             return 'Other';
         }
 
@@ -1390,6 +2015,7 @@
             }
         }
 
+
         function renderStatistics() {
             let completedTransactions;
             
@@ -1400,24 +2026,16 @@
             if (statsPeriod === 'thisMonth') {
                 completedTransactions = transactions.filter(t => {
                     if (t.status !== '✅') return false;
-                    const mKey = getMonthKeyFromStr(t.date);
-                    if (mKey) {
-                        const [tYear, tMonth1] = mKey.split('-').map(Number);
-                        return (tMonth1 - 1) === currentMonth && tYear === currentYear;
-                    }
-                    return false;
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
                 });
             } else if (statsPeriod === 'nextMonth') {
                 const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
                 const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
                 
                 completedTransactions = transactions.filter(t => {
-                    const mKey = getMonthKeyFromStr(t.date);
-                    if (mKey) {
-                        const [tYear, tMonth1] = mKey.split('-').map(Number);
-                        return (tMonth1 - 1) === nextMonth && tYear === nextYear;
-                    }
-                    return false;
+                    const tDate = new Date(t.date);
+                    return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
                 });
             } else {
                 completedTransactions = transactions.filter(t => t.status === '✅');
@@ -1476,7 +2094,7 @@
             
             breakdown.innerHTML = `
                 ${categories.map((cat, i) => {
-                    const percentage = total > 0 ? ((amounts[i] / total) * 100).toFixed(1) : '0.0';
+                    const percentage = ((amounts[i] / total) * 100).toFixed(1);
                     return `
                         <div onclick="showCategoryTransactions('${cat}')" style="padding: 12px; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background='white'">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -1524,8 +2142,6 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             const total = data.reduce((sum, val) => sum + val, 0);
-            if (total === 0) return;
-            
             let currentAngle = -Math.PI / 2;
             
             data.forEach((value, index) => {
@@ -1534,7 +2150,7 @@
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
                 ctx.lineTo(centerX, centerY);
-                ctx.fillStyle = colors[labels[index]] || '#999';
+                ctx.fillStyle = colors[labels[index]];
                 ctx.fill();
                 
                 const labelAngle = currentAngle + sliceAngle / 2;
@@ -1559,29 +2175,25 @@
                 .filter(t => {
                     if (categorizeTransaction(t.event, t.amount, t.comment, t.category) !== category) return false;
                     
-                    const mKey = getMonthKeyFromStr(t.date);
-                    if (mKey) {
-                        const [tYear, tMonth1] = mKey.split('-').map(Number);
-                        const tMonth = tMonth1 - 1;
-                        if (statsPeriod === 'thisMonth') {
-                            if (tMonth !== now.getMonth() || tYear !== now.getFullYear()) {
-                                return false;
-                            }
-                            if (t.status !== '✅') return false;
-                        } else if (statsPeriod === 'nextMonth') {
-                            const nextMonth = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
-                            const nextYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
-                            if (tMonth !== nextMonth || tYear !== nextYear) {
-                                return false;
-                            }
-                        } else {
-                            if (t.status !== '✅') return false;
+                    const tDate = new Date(t.date);
+                    if (statsPeriod === 'thisMonth') {
+                        if (tDate.getMonth() !== now.getMonth() || tDate.getFullYear() !== now.getFullYear()) {
+                            return false;
                         }
-                        return true;
+                        if (t.status !== '✅') return false;
+                    } else if (statsPeriod === 'nextMonth') {
+                        const nextMonth = now.getMonth() === 11 ? 0 : now.getMonth() + 1;
+                        const nextYear = now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
+                        if (tDate.getMonth() !== nextMonth || tDate.getFullYear() !== nextYear) {
+                            return false;
+                        }
+                    } else {
+                        if (t.status !== '✅') return false;
                     }
-                    return false;
+                    
+                    return true;
                 })
-                .sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
             
             if (categoryTransactions.length === 0) {
                 container.innerHTML = `
@@ -1622,6 +2234,7 @@
             `;
         }
 
+
         function init() {
             const savedScriptUrl = localStorage.getItem('scriptUrl');
             if (savedScriptUrl) {
@@ -1635,7 +2248,7 @@
             document.getElementById('dateInput').value = today;
             
             document.getElementById('dateInput').addEventListener('change', function(e) {
-                const selectedDate = parseLocalDate(e.target.value);
+                const selectedDate = new Date(e.target.value);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
                 selectedDate.setHours(0, 0, 0, 0);
@@ -1657,12 +2270,28 @@
             }
 
             scriptUrl = inputScriptUrl;
-            localStorage.setItem('scriptUrl', scriptUrl);
             
-            document.getElementById('setupCard').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
+            // Try to save to localStorage (might fail in Safari private mode)
+            try {
+                localStorage.setItem('scriptUrl', scriptUrl);
+            } catch (e) {
+                console.warn('localStorage not available - URL will not be saved for next time');
+                // Continue anyway
+            }
             
-            loadFromSheet();
+            // Delay to ensure DOM is ready
+            setTimeout(() => {
+                const setupCard = document.getElementById('setupCard');
+                const mainApp = document.getElementById('mainApp');
+                
+                if (setupCard && mainApp) {
+                    setupCard.classList.add('hidden');
+                    mainApp.classList.remove('hidden');
+                    loadFromSheet();
+                } else {
+                    console.error('Could not find setup elements');
+                }
+            }, 100);
         }
 
         function disconnectSheet() {
@@ -1696,33 +2325,22 @@
                 const dataRows = rows.slice(1);
                 
                 transactions = dataRows.map((row, index) => {
-                    let dateStr = '';
+                    let date;
                     let dateWarning = '';
-                    
                     try {
                         if (row[0]) {
-                            const raw = row[0].toString().trim();
-                            const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
-                            if (match) {
-                                dateStr = `${match[1]}-${match[2]}-${match[3]}`;
-                            } else {
-                                const parsedDate = new Date(row[0]);
-                                if (!isNaN(parsedDate.getTime())) {
-                                    const y = parsedDate.getFullYear();
-                                    const m = String(parsedDate.getMonth() + 1).padStart(2, '0');
-                                    const d = String(parsedDate.getDate()).padStart(2, '0');
-                                    dateStr = `${y}-${m}-${d}`;
-                                } else {
-                                    dateStr = new Date().toISOString().split('T')[0];
-                                    dateWarning = ` ⚠️ Invalid date`;
-                                }
+                            const dateStr = typeof row[0] === 'string' ? row[0] : row[0].toString();
+                            date = new Date(dateStr);
+                            if (isNaN(date.getTime())) {
+                                dateWarning = ` ⚠️ Invalid date: ${row[0]}`;
+                                date = new Date();
                             }
                         } else {
-                            dateStr = new Date().toISOString().split('T')[0];
+                            date = new Date();
                         }
                     } catch (e) {
                         dateWarning = ` ⚠️ Date error`;
-                        dateStr = new Date().toISOString().split('T')[0];
+                        date = new Date();
                     }
                     
                     const completed = row[4];
@@ -1733,10 +2351,10 @@
                     
                     return {
                         id: index,
-                        date: dateStr,
+                        date: date.toISOString().split('T')[0],
                         event: row[1] || '',
                         amount: parseFloat(row[2]) || 0,
-                        category: row[3] || '',
+                        category: row[3] || '', // Category from column D (index 3)
                         status: status,
                         comment: ((row[5] !== undefined && row[5] !== null) ? row[5] : '') + dateWarning
                     };
@@ -1758,7 +2376,7 @@
             updateSyncStatus('syncing', 'Saving to Google Sheets...');
             
             try {
-                const sorted = [...transactions].sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+                const sorted = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
                 
                 const rows = sorted.map(t => {
                     const completed = (t.status === '✅' || t.status === '▶️') ? 'TRUE' : 'FALSE';
@@ -1767,7 +2385,7 @@
                         t.date,
                         t.event,
                         t.amount,
-                        categoryToSave,
+                        categoryToSave, // Category in column D
                         completed,
                         t.comment
                     ];
@@ -1832,6 +2450,8 @@
                 document.getElementById('saveBtn').textContent = 'Save to Google Sheet';
                 document.getElementById('deleteBtn').classList.add('hidden');
                 document.getElementById('categoryInput').value = 'auto';
+            setCategory('auto');
+                setCategory('auto');
             }
         }
 
@@ -1844,23 +2464,41 @@
             document.getElementById('amountInput').value = Math.abs(transaction.amount);
             document.getElementById('statusInput').value = transaction.status;
             document.getElementById('commentInput').value = transaction.comment || '';
-            document.getElementById('categoryInput').value = transaction.category || 'auto';
             
+            setCategory(transaction.category || 'auto');
+            
+            // Set transaction type based on amount
             if (transaction.amount < 0) {
                 setTransactionType('expense');
             } else {
                 setTransactionType('income');
             }
             
+            // Set DD state
+            isDDTransaction = transaction.isDD || (transaction.comment && transaction.comment.toUpperCase().includes('DD')) || false;
+            const ddBtn = document.getElementById('ddBtn');
+            if (isDDTransaction) {
+                ddBtn.style.background = '#000';
+                ddBtn.style.color = 'white';
+                ddBtn.title = 'DD (Deferred Debit) - ON';
+            } else {
+                ddBtn.style.background = 'white';
+                ddBtn.style.color = '#000';
+                ddBtn.title = 'DD (Deferred Debit) - OFF';
+            }
+            
             editingTransactionId = transactionId;
             document.querySelector('.form-title').textContent = 'Edit transaction';
             document.getElementById('saveBtn').textContent = 'Update transaction';
             document.getElementById('deleteBtn').classList.remove('hidden');
+            
             document.getElementById('transactionForm').classList.remove('hidden');
         }
 
         async function deleteTransaction() {
-            if (!confirm('Delete this transaction?')) return;
+            if (!confirm('Delete this transaction?')) {
+                return;
+            }
             
             if (editingTransactionId !== null) {
                 transactions = transactions.filter(t => t.id !== editingTransactionId);
@@ -1868,7 +2506,9 @@
                 
                 renderTransactions();
                 updateBalance();
+                
                 await saveToSheet();
+                
                 toggleForm();
             }
         }
@@ -1877,6 +2517,7 @@
             const modal = document.getElementById('multiDateModal');
             modal.style.display = 'flex';
             
+            // Set default date to current date input value
             const currentDate = document.getElementById('dateInput').value;
             if (currentDate) {
                 document.getElementById('multiDatePicker').value = currentDate;
@@ -1914,8 +2555,7 @@
             }
             
             list.innerHTML = selectedMultipleDates.map(date => {
-                const parts = date.split('-');
-                const dateObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+                const dateObj = new Date(date + 'T00:00:00');
                 const formatted = dateObj.toLocaleDateString('en-US', { 
                     weekday: 'short', 
                     year: 'numeric', 
@@ -1938,11 +2578,13 @@
                 return;
             }
             
+            // Update the display
             const display = document.getElementById('selectedDatesDisplay');
             display.textContent = `${selectedMultipleDates.length} dates selected`;
             display.style.color = '#27ae60';
             display.style.fontWeight = '600';
             
+            // Disable the single date input
             document.getElementById('dateInput').disabled = true;
             document.getElementById('dateInput').style.opacity = '0.5';
             
@@ -1963,6 +2605,7 @@
             const eventName = document.getElementById('eventInput').value;
             let amount = parseFloat(document.getElementById('amountInput').value);
             
+            // Apply sign based on transaction type
             if (transactionType === 'expense' && amount > 0) {
                 amount = -amount;
             } else if (transactionType === 'income' && amount < 0) {
@@ -1974,6 +2617,7 @@
             const selectedCategory = document.getElementById('categoryInput').value;
 
             if (editingTransactionId !== null) {
+                // Edit existing transaction (no multiple dates for editing)
                 const index = transactions.findIndex(t => t.id === editingTransactionId);
                 if (index !== -1) {
                     transactions[index] = {
@@ -1983,22 +2627,26 @@
                         amount: amount,
                         status: status,
                         comment: comment,
-                        category: selectedCategory !== 'auto' ? selectedCategory : ''
+                        category: selectedCategory !== 'auto' ? selectedCategory : '',
+                        isDD: isDDTransaction
                     };
                 }
                 editingTransactionId = null;
             } else {
+                // Determine which dates to use
                 const datesToUse = selectedMultipleDates.length > 0 ? selectedMultipleDates : [date];
                 
+                // Create transaction for each selected date
                 datesToUse.forEach(transDate => {
                     const transaction = {
-                        id: Date.now() + Math.random(),
+                        id: Date.now() + Math.random(), // Ensure unique IDs
                         date: transDate,
                         event: eventName,
                         amount: amount,
                         status: status,
                         comment: comment,
-                        category: selectedCategory !== 'auto' ? selectedCategory : ''
+                        category: selectedCategory !== 'auto' ? selectedCategory : '',
+                        isDD: isDDTransaction
                     };
                     transactions.push(transaction);
                 });
@@ -2006,16 +2654,22 @@
 
             renderTransactions();
             updateBalance();
+            
             await saveToSheet();
             
             document.getElementById('addForm').reset();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateInput').value = today;
-            setTransactionType('expense');
+            setTransactionType('expense'); // Reset to expense
+            isDDTransaction = false; // Reset DD toggle
+            const ddBtn = document.getElementById('ddBtn');
+            ddBtn.style.background = 'white';
+            ddBtn.style.color = '#000';
+            ddBtn.title = 'DD (Deferred Debit) - OFF';
             document.querySelector('.form-title').textContent = 'New transaction';
             document.getElementById('saveBtn').textContent = 'Save';
             document.getElementById('categoryInput').value = 'auto';
-            clearMultipleDates();
+            clearMultipleDates(); // Clear multiple dates selection
             toggleForm();
         }
 
@@ -2024,13 +2678,13 @@
             today.setHours(0, 0, 0, 0);
             
             const todayTransactions = transactions.filter(t => {
-                const transactionDate = parseLocalDate(t.date);
+                const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 return transactionDate <= today;
             });
             
             const futureTransactions = transactions.filter(t => {
-                const transactionDate = parseLocalDate(t.date);
+                const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 return transactionDate > today;
             });
@@ -2043,16 +2697,19 @@
                 .filter(t => t.status === '⏳')
                 .reduce((sum, t) => sum + t.amount, 0);
             
-            const sortedFuture = [...futureTransactions].sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+            const sortedFuture = [...futureTransactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const nextSalaryIndex = sortedFuture.findIndex(t => t.amount > 0 && t.event.toLowerCase().includes('salary'));
+            
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
-            
             const upcomingThisMonth = futureTransactions.filter(t => {
-                const tDate = parseLocalDate(t.date);
+                const tDate = new Date(t.date);
                 return tDate.getMonth() === currentMonth && tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            const nextDebitDiffere = sortedFuture.find(t => isDDComment(t.comment));
+            const nextDebitDiffere = sortedFuture.find(t => 
+                t.isDD || (t.comment && t.comment.toUpperCase().includes('DD'))
+            );
             
             let transactionsUntilDebit = 0;
             let balanceAfterNextDebit = null;
@@ -2061,13 +2718,13 @@
             let availableNextMonth = null;
             
             if (nextDebitDiffere) {
-                const firstDebitDate = parseLocalDate(nextDebitDiffere.date);
+                const firstDebitDate = new Date(nextDebitDiffere.date);
                 const nextMonth = firstDebitDate.getMonth();
                 const nextYear = firstDebitDate.getFullYear();
                 
                 const nextMonthDebitDiffere = sortedFuture.filter(t => {
-                    const tDate = parseLocalDate(t.date);
-                    return isDDComment(t.comment) &&
+                    const tDate = new Date(t.date);
+                    return (t.isDD || (t.comment && t.comment.toUpperCase().includes('DD'))) &&
                            tDate.getMonth() === nextMonth &&
                            tDate.getFullYear() === nextYear;
                 });
@@ -2076,7 +2733,7 @@
                 balanceAfterJustDebit = available + nextDebitAmount;
                 
                 const thisMonthSalary = sortedFuture.filter(t => {
-                    const tDate = parseLocalDate(t.date);
+                    const tDate = new Date(t.date);
                     return t.amount > 0 && 
                            t.event.toLowerCase().includes('salary') &&
                            tDate.getMonth() === currentMonth &&
@@ -2084,7 +2741,7 @@
                 }).reduce((sum, t) => sum + t.amount, 0);
                 
                 const nextMonthTransactions = sortedFuture.filter(t => {
-                    const tDate = parseLocalDate(t.date);
+                    const tDate = new Date(t.date);
                     return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
                 });
                 
@@ -2094,7 +2751,8 @@
                 
                 nextMonthTransactions.forEach(t => {
                     const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                    if (isDDComment(t.comment)) {
+                    // Débit différé is identified by isDD flag or "DD" in comment
+                    if (t.isDD || (t.comment && t.comment.toUpperCase().includes('DD'))) {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
                         nextMonthLiving += t.amount;
@@ -2121,7 +2779,7 @@
         }
 
         function updateBalance() {
-            const { available, balanceAfterNextDebit, balanceAfterJustDebit, futureCount } = calculateBalance();
+            const { total, available, pendingToday, upcomingThisMonth, balanceAfterNextDebit, balanceAfterJustDebit, transactionsUntilDebit, nextDebitAmount, futureCount } = calculateBalance();
             
             const myMoney = balanceAfterJustDebit !== null ? balanceAfterJustDebit : available;
             const myMoneyEl = document.getElementById('myMoneyBalance');
@@ -2143,7 +2801,11 @@
             const afterDebitEl = document.getElementById('afterDebitBalance');
             if (balanceAfterNextDebit !== null) {
                 afterDebitEl.textContent = `€${balanceAfterNextDebit.toFixed(2)}`;
-                afterDebitEl.style.color = balanceAfterNextDebit < 0 ? '#e74c3c' : '#27ae60';
+                if (balanceAfterNextDebit < 0) {
+                    afterDebitEl.style.color = '#e74c3c';
+                } else {
+                    afterDebitEl.style.color = '#27ae60';
+                }
             } else {
                 afterDebitEl.textContent = 'N/A';
                 afterDebitEl.style.color = '#999';
@@ -2169,18 +2831,18 @@
                 endNextMonth.setHours(23, 59, 59, 999);
 
                 displayTransactions = transactions.filter(t => {
-                    const transactionDate = parseLocalDate(t.date);
+                    const transactionDate = new Date(t.date);
                     return transactionDate <= endNextMonth;
                 });
             } else {
                 displayTransactions = transactions.filter(t => {
-                    const transactionDate = parseLocalDate(t.date);
+                    const transactionDate = new Date(t.date);
                     transactionDate.setHours(0, 0, 0, 0);
                     return transactionDate <= today;
                 });
             }
 
-            const sorted = [...displayTransactions].sort((a, b) => parseLocalDate(b.date) - parseLocalDate(a.date));
+            const sorted = [...displayTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
             
             const categoryEmojis = {
                 'Living': '🏠',
@@ -2195,14 +2857,26 @@
             
             const withBalances = sorted.reverse().map(t => {
                 const upToDate = transactions.filter(tx => {
-                    return parseLocalDate(tx.date) <= parseLocalDate(t.date);
+                    return new Date(tx.date) <= new Date(t.date)
+                        && tx.status === '✅';
                 }).reduce((sum, tx) => sum + tx.amount, 0);
-                const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                return { ...t, balance: upToDate, category: category };
+
+                const category = categorizeTransaction(
+                    t.event,
+                    t.amount,
+                    t.comment,
+                    t.category
+                );
+
+                return {
+                    ...t,
+                    balance: upToDate,
+                    category: category
+                };
             }).reverse();
 
             container.innerHTML = withBalances.map(t => {
-                const transactionDate = parseLocalDate(t.date);
+                const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const isFuture = transactionDate > today;
                 const categoryEmoji = categoryEmojis[t.category] || '❓';
@@ -2220,7 +2894,7 @@
                     </div>
                     <div class="transaction-right">
                         <div class="transaction-amount ${t.amount >= 0 ? 'positive' : 'negative'}" style="${boldStyle}">
-                            €${Math.abs(t.amount).toFixed(2)}
+                            ${t.amount >= 0 ? '' : ''}€${Math.abs(t.amount).toFixed(2)}
                         </div>
                         <div class="transaction-balance" style="${greyStyle}">€${t.balance.toFixed(2)}</div>
                     </div>
@@ -2267,7 +2941,7 @@
             const todayStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
             
             const completedToday = transactions.filter(t => {
-                const transactionDate = parseLocalDate(t.date);
+                const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
@@ -2291,34 +2965,36 @@
             const currentYear = today.getFullYear();
             
             const sortedFuture = transactions.filter(t => {
-                const transactionDate = parseLocalDate(t.date);
+                const transactionDate = new Date(t.date);
                 transactionDate.setHours(0, 0, 0, 0);
                 const todayDate = new Date();
                 todayDate.setHours(0, 0, 0, 0);
                 return transactionDate > todayDate;
-            }).sort((a, b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+            }).sort((a, b) => new Date(a.date) - new Date(b.date));
             
             const thisMonthSalary = sortedFuture.filter(t => {
-                const tDate = parseLocalDate(t.date);
+                const tDate = new Date(t.date);
                 return t.amount > 0 && 
                        t.event.toLowerCase().includes('salary') &&
                        tDate.getMonth() === currentMonth &&
                        tDate.getFullYear() === currentYear;
             }).reduce((sum, t) => sum + t.amount, 0);
             
-            const nextDebitDiffere = sortedFuture.find(t => isDDComment(t.comment));
+            const nextDebitDiffere = sortedFuture.find(t => 
+                t.isDD || (t.comment && t.comment.toUpperCase().includes('DD'))
+            );
             
             let explanation = '📅 Available next month:\n\n';
             explanation += `Available today: €${available.toFixed(2)}\n`;
             explanation += `+ This month's salary: €${thisMonthSalary.toFixed(2)}\n`;
             
             if (nextDebitDiffere) {
-                const firstDebitDate = parseLocalDate(nextDebitDiffere.date);
+                const firstDebitDate = new Date(nextDebitDiffere.date);
                 const nextMonth = firstDebitDate.getMonth();
                 const nextYear = firstDebitDate.getFullYear();
                 
                 const nextMonthTransactions = sortedFuture.filter(t => {
-                    const tDate = parseLocalDate(t.date);
+                    const tDate = new Date(t.date);
                     return tDate.getMonth() === nextMonth && tDate.getFullYear() === nextYear;
                 });
                 
@@ -2328,7 +3004,8 @@
                 
                 nextMonthTransactions.forEach(t => {
                     const category = categorizeTransaction(t.event, t.amount, t.comment, t.category);
-                    if (isDDComment(t.comment)) {
+                    // Débit différé is identified by isDD flag or "DD" in comment
+                    if (t.isDD || (t.comment && t.comment.toUpperCase().includes('DD'))) {
                         nextMonthDD += t.amount;
                     } else if (category === 'Living') {
                         nextMonthLiving += t.amount;
@@ -2352,14 +3029,29 @@
         }
 
         function formatDate(dateStr) {
-            const date = parseLocalDate(dateStr);
-            if (isNaN(date.getTime())) return dateStr;
+            const date = new Date(dateStr);
             const day = date.getDate();
             const month = date.toLocaleString('en', { month: 'short' });
             return `${day} ${month}`;
         }
 
+        window.addEventListener('resize', () => {
+            if (!showingDDTracking) return;
+
+            clearTimeout(ddChartResizeTimer);
+            ddChartResizeTimer = setTimeout(() => {
+                requestAnimationFrame(() => {
+                    if (moneyViewMode === 'debt' || moneyViewMode === 'realMoney') {
+                        renderDDTracking();
+                    } else if (moneyViewMode === 'incomeSpending') {
+                        renderIncomeSpending();
+                    }
+                });
+            }, 100);
+        });
+
         init();
     </script>
 </body>
 </html>
+

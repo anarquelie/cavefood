@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Que peut manger mon cobaye ?</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <style>
+    /* ── LIGHT MODE ── */
+    :root {
+      --bg: #ede8df;
+      --surface: #faf8f4;
+      --ink: #1c1a16;
+      --muted: #8a8070;
+      --accent: #3d6b45;
+      --border: #d8d0c4;
+
+      /* Green — très-conseillé + conseillé */
+      --green-card-bg:    rgba(220, 243, 226, 0.85);
+      --green-card-border:rgba(110, 185, 130, 0.45);
+      --green-icon-bg:    rgba(72,  174, 100, 0.18);
+      --green-badge-bg:   rgba(72,  174, 100, 0.18);
+      --green-badge-fg:   #1a5c35;
+
+      /* Yellow — avec-moderation */
+      --yellow-card-bg:    rgba(255, 243, 195, 0.88);
+      --yellow-card-border:rgba(210, 175,  50, 0.50);
+      --yellow-icon-bg:    rgba(224, 175,  50, 0.22);
+      --yellow-badge-bg:   #f5c830;
+      --yellow-badge-fg:   #4a3400;
+
+      /* Red — déconseillé + proscrire */
+      --red-card-bg:    rgba(253, 228, 228, 0.85);
+      --red-card-border:rgba(210, 120, 120, 0.45);
+      --red-icon-bg:    rgba(210,  70,  70, 0.14);
+      --red-badge-bg:   rgba(210,  70,  70, 0.14);
+      --red-badge-fg:   #7a1010;
+    }
+
+    /* ── DARK MODE ── */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1a1814;
+        --surface: #232018;
+        --ink: #f0ece4;
+        --muted: #8a8070;
+        --accent: #72c48a;
+        --border: #38342c;
+
+        /* Green */
+        --green-card-bg:    rgba(40,  80,  50, 0.70);
+        --green-card-border:rgba(90,  170, 110, 0.35);
+        --green-icon-bg:    rgba(72,  174, 100, 0.22);
+        --green-badge-bg:   rgba(72,  174, 100, 0.22);
+        --green-badge-fg:   #7de8a0;
+
+        /* Yellow */
+        --yellow-card-bg:    #3d3208;
+        --yellow-card-border:#8a7010;
+        --yellow-icon-bg:    rgba(220, 180, 40, 0.30);
+        --yellow-badge-bg:   #c49a00;
+        --yellow-badge-fg:   #1a1000;
+
+        /* Red */
+        --red-card-bg:    rgba(70, 25, 25, 0.72);
+        --red-card-border:rgba(200, 90, 90, 0.35);
+        --red-icon-bg:    rgba(210, 70, 70, 0.20);
+        --red-badge-bg:   rgba(210, 70, 70, 0.22);
+        --red-badge-fg:   #f08080;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem 3rem;
+      transition: flex .4s ease, padding .4s ease;
+    }
+
+    body.has-results .hero {
+      flex: 0;
+      padding: .9rem 1.5rem .9rem;
+      justify-content: center;
+    }
+
+    .hero-top {
+      text-align: center;
+      margin-bottom: 2rem;
+      transition: margin .35s ease;
+    }
+
+    body.has-results .hero-top {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      margin-bottom: .85rem;
+      text-align: left;
+    }
+
+    .hero-icon {
+      font-size: 3.2rem;
+      display: block;
+      margin-bottom: .5rem;
+      animation: float 4s ease-in-out infinite;
+      transition: font-size .35s ease, margin .35s ease;
+    }
+
+    body.has-results .hero-icon {
+      font-size: 1.4rem;
+      display: inline;
+      margin-bottom: 0;
+      animation: none;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      line-height: 1.2;
+      transition: font-size .35s ease;
+    }
+
+    body.has-results .hero h1 {
+      font-size: 1rem;
+      font-weight: 500;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    body.has-results .hero h1 em { font-style: normal; }
+
+    .hero h1 .line-break { display: block; }
+    body.has-results .hero h1 .line-break { display: inline; }
+
+    /* ── SEARCH ── */
+    .search-block { width: 100%; max-width: 580px; }
+    .search-wrap { position: relative; width: 100%; }
+
+    .search-wrap .ico-search {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      width: 20px; height: 20px; stroke: var(--muted); fill: none;
+      stroke-width: 2; stroke-linecap: round; pointer-events: none; transition: stroke .15s;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: .85rem 2.5rem .85rem 3rem;
+      border: 1.5px solid var(--border); border-radius: 999px;
+      background: var(--surface); font-family: 'DM Sans', sans-serif;
+      font-size: 1rem; color: var(--ink); outline: none;
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 2px 20px rgba(61,107,69,.13); }
+    .search-wrap input::placeholder { color: var(--muted); }
+
+    .btn-clear {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--muted); display: none; line-height: 0;
+    }
+    .btn-clear svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+    .btn-clear:hover { color: var(--ink); }
+
+    /* ── RESULTS ── */
+    .results { max-width: 600px; width: 100%; margin: 0 auto; padding: 0 1rem 4rem; display: none; }
+    body.has-results .results { display: block; }
+
+    .result-meta { font-size: .8rem; color: var(--muted); margin-bottom: .75rem; padding-left: .2rem; }
+
+    .grid { display: flex; flex-direction: column; gap: .65rem; }
+
+    /* ── CARD ── */
+    .card {
+      border-radius: 28px;
+      border: 1.5px solid;
+      padding: 1rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      box-shadow: 0 2px 10px rgba(0,0,0,.03), 0 16px 32px rgba(0,0,0,.05);
+      transition: transform .3s ease, box-shadow .3s ease;
+      cursor: default;
+      animation: fadeUp .22s ease both;
+    }
+    .card.hidden { display: none; }
+    .card:hover {
+      transform: scale(1.02);
+      box-shadow: 0 2px 10px rgba(0,0,0,.04), 0 20px 40px rgba(0,0,0,.08);
+    }
+
+    /* ── GREEN (très-conseillé + conseillé) ── */
+    .card[data-safety="tres-conseille"],
+    .card[data-safety="conseille"] {
+      background: var(--green-card-bg);
+      border-color: var(--green-card-border);
+    }
+    .card[data-safety="tres-conseille"] .card-icon,
+    .card[data-safety="conseille"]      .card-icon { background: var(--green-icon-bg); }
+    .card[data-safety="tres-conseille"] .badge,
+    .card[data-safety="conseille"]      .badge {
+      background: var(--green-badge-bg);
+      color: var(--green-badge-fg);
+    }
+
+    /* ── YELLOW (avec-moderation) ── */
+    .card[data-safety="avec-moderation"] {
+      background: var(--yellow-card-bg);
+      border-color: var(--yellow-card-border);
+    }
+    .card[data-safety="avec-moderation"] .card-icon { background: var(--yellow-icon-bg); }
+    .card[data-safety="avec-moderation"] .badge {
+      background: var(--yellow-badge-bg);
+      color: var(--yellow-badge-fg);
+    }
+
+    /* ── RED (déconseillé + proscrire) ── */
+    .card[data-safety="deconseille"],
+    .card[data-safety="proscrire"] {
+      background: var(--red-card-bg);
+      border-color: var(--red-card-border);
+    }
+    .card[data-safety="deconseille"] .card-icon,
+    .card[data-safety="proscrire"]   .card-icon { background: var(--red-icon-bg); }
+    .card[data-safety="deconseille"] .badge,
+    .card[data-safety="proscrire"]   .badge {
+      background: var(--red-badge-bg);
+      color: var(--red-badge-fg);
+    }
+
+    /* ── CARD INTERNALS ── */
+    .card-icon {
+      width: 56px; height: 56px; flex-shrink: 0;
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,.06);
+    }
+
+    .card-body { flex: 1; min-width: 0; }
+    .card-body h3 {
+      font-size: 1.02rem; font-weight: 600; color: var(--ink);
+      letter-spacing: -.01em; text-transform: capitalize; line-height: 1.3;
+    }
+    .card-type {
+      font-size: .78rem; color: var(--muted);
+      font-weight: 500; text-transform: capitalize; margin-top: 2px;
+    }
+
+    .card-aside {
+      display: flex; flex-direction: column;
+      align-items: flex-end; gap: .4rem;
+      flex-shrink: 0; padding-left: .5rem;
+    }
+
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 99px; font-size: .65rem;
+      font-weight: 700; letter-spacing: .07em;
+      text-transform: uppercase; white-space: nowrap;
+    }
+
+    .badge-vitc {
+      font-size: .73rem; color: var(--muted);
+      font-weight: 500; white-space: nowrap;
+    }
+    .badge-vitc strong { color: var(--ink); font-weight: 600; }
+
+    /* ── EMPTY & LOADER ── */
+    .empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: .9rem; display: none; }
+    .empty.visible { display: block; }
+    .loader { text-align: center; padding: 2rem; color: var(--muted); font-size: .9rem; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-top">
+    <span class="hero-icon">🐹</span>
+    <h1>Que peut manger<span class="line-break"> </span><em>mon cobaye ?</em></h1>
+  </div>
+
+  <div class="search-block">
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Rechercher un aliment…"
+             list="food-list" aria-label="Rechercher un aliment" autocomplete="off">
+      <svg class="ico-search" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/>
+      </svg>
+      <button class="btn-clear" id="btn-clear" aria-label="Effacer la recherche">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <datalist id="food-list"></datalist>
+  </div>
+</div>
+
+<section class="results" aria-live="polite">
+  <p class="result-meta" id="result-meta"></p>
+  <div class="grid" id="grid">
+    <div class="empty" id="empty">Aucun aliment trouvé.</div>
+  </div>
+</section>
+
+<script>
+const catLabels = { fruit: 'Fruit', légume: 'Légume', herb: 'Herbe / Plante' };
+const badgeLabels = {
+  'tres-conseille':  'Très conseillé',
+  'conseille':       'Conseillé',
+  'avec-moderation': 'Avec modération',
+  'deconseille':     'Déconseillé',
+  'proscrire':       'À proscrire',
+};
+
+const grid     = document.getElementById('grid');
+const empty    = document.getElementById('empty');
+const searchEl = document.getElementById('search');
+const btnClear = document.getElementById('btn-clear');
+const metaEl   = document.getElementById('result-meta');
+const datalist = document.getElementById('food-list');
+
+function filter() {
+  const q = searchEl.value.toLowerCase().trim();
+  let visible = 0;
+
+  document.querySelectorAll('.card').forEach(card => {
+    const show = q !== '' && card.dataset.name.includes(q);
+    card.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+
+  empty.classList.toggle('visible', q !== '' && visible === 0);
+
+  if (q !== '') {
+    document.body.classList.add('has-results');
+    metaEl.textContent = visible === 0
+      ? ''
+      : `${visible} aliment${visible > 1 ? 's' : ''} trouvé${visible > 1 ? 's' : ''}`;
+  } else {
+    document.body.classList.remove('has-results');
+    metaEl.textContent = '';
+  }
+
+  btnClear.style.display = q ? 'block' : 'none';
+}
+
+fetch('foods.json')
+  .then(r => r.json())
+  .then(foods => {
+
+    foods.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.name.charAt(0).toUpperCase() + f.name.slice(1);
+      datalist.appendChild(opt);
+    });
+
+    foods.forEach(f => {
+      const safetySlug = f.category.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '-');
+      const badgeText  = badgeLabels[safetySlug] || f.category;
+      const typeLabel  = catLabels[f.type] || f.type;
+
+      const el = document.createElement('article');
+      el.className = 'card hidden';
+      el.dataset.safety = safetySlug;
+      el.dataset.name   = f.name.toLowerCase();
+      el.innerHTML = `
+        <div class="card-icon">${f.emoji}</div>
+        <div class="card-body">
+          <h3>${f.name}</h3>
+          <p class="card-type">${typeLabel}</p>
+        </div>
+        <div class="card-aside">
+          <span class="badge">${badgeText}</span>
+          ${f.vitC_usda ? `<span class="badge-vitc">Vit. C&thinsp;: <strong>${f.vitC_usda}</strong>&thinsp;mg&thinsp;/&thinsp;100g</span>` : ''}
+        </div>
+      `;
+      grid.appendChild(el);
+    });
+
+    searchEl.addEventListener('input', filter);
+    btnClear.addEventListener('click', () => {
+      searchEl.value = '';
+      filter();
+      searchEl.focus();
+    });
+
+  })
+  .catch(() => {
+    grid.innerHTML = '<p class="loader">Impossible de charger foods.json. Assurez-vous que le fichier est dans le même dossier.</p>';
+  });
+</script>
+</body>
+</html>

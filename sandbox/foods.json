@@ -1,0 +1,1026 @@
+[
+  {
+    "name": "ail",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🧄",
+    "type": "légume",
+    "name_usda": "Garlic"
+  },
+  {
+    "name": "avocat",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🥑",
+    "type": "légume",
+    "name_usda": "Avocados"
+  },
+  {
+    "name": "asperge",
+    "category": "déconseillé",
+    "vitC": "10.8",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Asparagus"
+  },
+  {
+    "name": "aubergine",
+    "category": "conseillé",
+    "vitC": "1.7",
+    "emoji": "🍆",
+    "type": "légume",
+    "name_usda": "Eggplant"
+  },
+  {
+    "name": "batavia",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Lettuce, batavia"
+  },
+  {
+    "name": "bette / blette",
+    "category": "déconseillé",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Swiss chard"
+  },
+  {
+    "name": "betterave",
+    "category": "déconseillé",
+    "vitC": "3.6",
+    "emoji": "🫚",
+    "type": "légume",
+    "name_usda": "Beets"
+  },
+  {
+    "name": "bourrache",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌸",
+    "type": "légume",
+    "name_usda": "Borage"
+  },
+  {
+    "name": "brocoli",
+    "category": "conseillé",
+    "vitC": "93.2",
+    "emoji": "🥦",
+    "type": "légume",
+    "name_usda": "Broccoli"
+  },
+  {
+    "name": "carotte",
+    "category": "avec modération",
+    "vitC": "9.3",
+    "emoji": "🥕",
+    "type": "légume",
+    "name_usda": "Carrots"
+  },
+  {
+    "name": "celeri branche",
+    "category": "conseillé",
+    "vitC": "7",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Celery"
+  },
+  {
+    "name": "celeri rave",
+    "category": "conseillé",
+    "vitC": "8",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Celeriac"
+  },
+  {
+    "name": "champignons de paris",
+    "category": "déconseillé",
+    "vitC": "2",
+    "emoji": "🍄",
+    "type": "légume",
+    "name_usda": "Mushrooms, white"
+  },
+  {
+    "name": "chicoree",
+    "category": "conseillé",
+    "vitC": "24",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Chicory"
+  },
+  {
+    "name": "chou chinois",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Cabbage, Chinese (pak-choi)"
+  },
+  {
+    "name": "chou de bruxelles",
+    "category": "avec modération",
+    "vitC": "62",
+    "emoji": "🥦",
+    "type": "légume",
+    "name_usda": "Brussels sprouts"
+  },
+  {
+    "name": "chou fleur",
+    "category": "avec modération",
+    "vitC": "46.4",
+    "emoji": "🥦",
+    "type": "légume",
+    "name_usda": "Cauliflower"
+  },
+  {
+    "name": "chou frise",
+    "category": "avec modération",
+    "vitC": "120",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Kale"
+  },
+  {
+    "name": "chou blanc",
+    "category": "avec modération",
+    "vitC": "32.2",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Cabbage, raw"
+  },
+  {
+    "name": "chou rouge",
+    "category": "avec modération",
+    "vitC": "32.2",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Cabbage, red"
+  },
+  {
+    "name": "chou vert",
+    "category": "avec modération",
+    "vitC": "32.2",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Cabbage, savoy"
+  },
+  {
+    "name": "ciboulette",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Chives"
+  },
+  {
+    "name": "concombre",
+    "category": "conseillé",
+    "vitC": "5.3",
+    "emoji": "🥒",
+    "type": "légume",
+    "name_usda": "Cucumber"
+  },
+  {
+    "name": "courge",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🎃",
+    "type": "légume",
+    "name_usda": "Squash, winter"
+  },
+  {
+    "name": "courgette",
+    "category": "conseillé",
+    "vitC": "10.1",
+    "emoji": "🥒",
+    "type": "légume",
+    "name_usda": "Zucchini"
+  },
+  {
+    "name": "cresson",
+    "category": "avec modération",
+    "vitC": "69",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Watercress"
+  },
+  {
+    "name": "endive",
+    "category": "avec modération",
+    "vitC": "6.5",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Endive"
+  },
+  {
+    "name": "epinard",
+    "category": "déconseillé",
+    "vitC": "28.1",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Spinach"
+  },
+  {
+    "name": "fanes de betterave",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Beet greens"
+  },
+  {
+    "name": "fanes de carotte",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Carrot tops"
+  },
+  {
+    "name": "fanes de fenouil",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Fennel tops"
+  },
+  {
+    "name": "fanes de navet",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Turnip greens"
+  },
+  {
+    "name": "fanes de radis",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Radish tops"
+  },
+  {
+    "name": "fenouil",
+    "category": "conseillé",
+    "vitC": "120",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Fennel, bulb"
+  },
+  {
+    "name": "frisee",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Endive, frisee"
+  },
+  {
+    "name": "feuille de chene",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🍂",
+    "type": "légume",
+    "name_usda": "Lettuce, oak leaf"
+  },
+  {
+    "name": "haricots verts",
+    "category": "avec modération",
+    "vitC": "9.7",
+    "emoji": "🫘",
+    "type": "légume",
+    "name_usda": "Green beans"
+  },
+  {
+    "name": "haricots coco plats",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🫘",
+    "type": "légume",
+    "name_usda": "Beans, snap"
+  },
+  {
+    "name": "herbe",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌱",
+    "type": "légume",
+    "name_usda": "Grass"
+  },
+  {
+    "name": "laitue",
+    "category": "proscrire",
+    "vitC": "3.9",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Lettuce"
+  },
+  {
+    "name": "mache",
+    "category": "avec modération",
+    "vitC": "38.2",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Lamb's lettuce"
+  },
+  {
+    "name": "mesclun",
+    "category": "déconseillé",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Mesclun"
+  },
+  {
+    "name": "navet",
+    "category": "avec modération",
+    "vitC": "21",
+    "emoji": "🫚",
+    "type": "légume",
+    "name_usda": "Turnips"
+  },
+  {
+    "name": "oignon",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🧅",
+    "type": "légume",
+    "name_usda": "Onions"
+  },
+  {
+    "name": "panais",
+    "category": "conseillé",
+    "vitC": "17",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Parsnips"
+  },
+  {
+    "name": "petit pois",
+    "category": "avec modération",
+    "vitC": "14.2",
+    "emoji": "🫛",
+    "type": "légume",
+    "name_usda": "Peas, green"
+  },
+  {
+    "name": "pissenlits",
+    "category": "conseillé",
+    "vitC": "58.1",
+    "emoji": "🌼",
+    "type": "légume",
+    "name_usda": "Dandelion greens"
+  },
+  {
+    "name": "poireau",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Leeks"
+  },
+  {
+    "name": "poivron",
+    "category": "conseillé",
+    "vitC": "126",
+    "emoji": "🫑",
+    "type": "légume",
+    "name_usda": "Peppers, sweet"
+  },
+  {
+    "name": "potiron",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🎃",
+    "type": "légume",
+    "name_usda": "Pumpkin"
+  },
+  {
+    "name": "potimarron",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🎃",
+    "type": "légume",
+    "name_usda": "Squash, red kuri"
+  },
+  {
+    "name": "pourpier",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Purslane"
+  },
+  {
+    "name": "radis",
+    "category": "conseillé",
+    "vitC": "22.8",
+    "emoji": "🌸",
+    "type": "légume",
+    "name_usda": "Radishes"
+  },
+  {
+    "name": "radis noir",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌑",
+    "type": "légume",
+    "name_usda": "Radishes, black"
+  },
+  {
+    "name": "raifort",
+    "category": "conseillé",
+    "vitC": "141",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Horseradish"
+  },
+  {
+    "name": "rhubarbe",
+    "category": "proscrire",
+    "vitC": "8",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Rhubarb"
+  },
+  {
+    "name": "romaine",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Lettuce, cos or romaine"
+  },
+  {
+    "name": "roquette",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Arugula"
+  },
+  {
+    "name": "rutabaga",
+    "category": "conseillé",
+    "vitC": "18.8",
+    "emoji": "🫚",
+    "type": "légume",
+    "name_usda": "Rutabagas"
+  },
+  {
+    "name": "salsifis",
+    "category": "conseillé",
+    "vitC": "8",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Salsify"
+  },
+  {
+    "name": "scarole",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🥬",
+    "type": "légume",
+    "name_usda": "Escarole"
+  },
+  {
+    "name": "tomate",
+    "category": "avec modération",
+    "vitC": "19.1",
+    "emoji": "🍅",
+    "type": "légume",
+    "name_usda": "Tomatoes"
+  },
+  {
+    "name": "tomate cerise",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🍅",
+    "type": "légume",
+    "name_usda": "Tomatoes, cherry"
+  },
+  {
+    "name": "topinambour",
+    "category": "conseillé",
+    "vitC": "4",
+    "emoji": "🌿",
+    "type": "légume",
+    "name_usda": "Jerusalem artichokes"
+  },
+  {
+    "name": "feuilles de fraisier",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🍓",
+    "type": "verdure",
+    "name_usda": "Strawberry leaves"
+  },
+  {
+    "name": "feuilles de framboisier",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🫐",
+    "type": "verdure",
+    "name_usda": "Raspberry leaves"
+  },
+  {
+    "name": "feuilles de murier",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🫐",
+    "type": "verdure",
+    "name_usda": "Mulberry leaves"
+  },
+  {
+    "name": "feuilles de noisetier",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🍂",
+    "type": "verdure",
+    "name_usda": "Hazelnut leaves"
+  },
+  {
+    "name": "feuilles de saule",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "verdure",
+    "name_usda": "Willow leaves"
+  },
+  {
+    "name": "herbe",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌱",
+    "type": "verdure",
+    "name_usda": "Grass"
+  },
+  {
+    "name": "lamier pourpre",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌸",
+    "type": "verdure",
+    "name_usda": "Purple deadnettle"
+  },
+  {
+    "name": "luzerne fraiche",
+    "category": "déconseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "verdure",
+    "name_usda": "Alfalfa"
+  },
+  {
+    "name": "ortie",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "verdure",
+    "name_usda": "Stinging nettles"
+  },
+  {
+    "name": "pissenlits",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌼",
+    "type": "verdure",
+    "name_usda": "Dandelion greens"
+  },
+  {
+    "name": "plantain",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "verdure",
+    "name_usda": "Plantain herb"
+  },
+  {
+    "name": "trefles",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🍀",
+    "type": "verdure",
+    "name_usda": "Clover"
+  },
+  {
+    "name": "aneth",
+    "category": "avec modération",
+    "vitC": "85",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Dill"
+  },
+  {
+    "name": "angelique",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Angelica"
+  },
+  {
+    "name": "basilic",
+    "category": "avec modération",
+    "vitC": "61.2",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Basil"
+  },
+  {
+    "name": "cerfeuil",
+    "category": "déconseillé",
+    "vitC": "50",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Chervil"
+  },
+  {
+    "name": "coriandre",
+    "category": "conseillé",
+    "vitC": "27",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Coriander"
+  },
+  {
+    "name": "estragon",
+    "category": "avec modération",
+    "vitC": "50",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Tarragon"
+  },
+  {
+    "name": "fenouil aromatique",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Fennel, aromatic"
+  },
+  {
+    "name": "menthe",
+    "category": "conseillé",
+    "vitC": "13.3",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Spearmint"
+  },
+  {
+    "name": "oseille",
+    "category": "proscrire",
+    "vitC": "120",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Sorrel"
+  },
+  {
+    "name": "persil (plat et frisé)",
+    "category": "avec modération",
+    "vitC": "133",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Parsley"
+  },
+  {
+    "name": "sarriette",
+    "category": "proscrire",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Savory"
+  },
+  {
+    "name": "sauge",
+    "category": "proscrire",
+    "vitC": "32.4",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Sage"
+  },
+  {
+    "name": "thym",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🌿",
+    "type": "herbe",
+    "name_usda": "Thyme"
+  },
+  {
+    "name": "abricot",
+    "category": "conseillé",
+    "vitC": "10",
+    "emoji": "🍑",
+    "type": "fruit",
+    "name_usda": "Apricots"
+  },
+  {
+    "name": "ananas",
+    "category": "conseillé",
+    "vitC": "15.4",
+    "emoji": "🍍",
+    "type": "fruit",
+    "name_usda": "Pineapple"
+  },
+  {
+    "name": "banane",
+    "category": "conseillé",
+    "vitC": "9.1",
+    "emoji": "🍌",
+    "type": "fruit",
+    "name_usda": "Bananas"
+  },
+  {
+    "name": "banane plantain",
+    "category": "conseillé",
+    "vitC": "18.4",
+    "emoji": "🍌",
+    "type": "fruit",
+    "name_usda": "Plantains"
+  },
+  {
+    "name": "canneberge",
+    "category": "avec modération",
+    "vitC": "13.5",
+    "emoji": "🫐",
+    "type": "fruit",
+    "name_usda": "Cranberries"
+  },
+  {
+    "name": "cerise",
+    "category": "avec modération",
+    "vitC": "7",
+    "emoji": "🍒",
+    "type": "fruit",
+    "name_usda": "Cherries"
+  },
+  {
+    "name": "clementine",
+    "category": "conseillé",
+    "vitC": "30.8",
+    "emoji": "🍊",
+    "type": "fruit",
+    "name_usda": "Clementines"
+  },
+  {
+    "name": "coing",
+    "category": "conseillé",
+    "vitC": "15",
+    "emoji": "🍋",
+    "type": "fruit",
+    "name_usda": "Quinces"
+  },
+  {
+    "name": "datte",
+    "category": "déconseillé",
+    "vitC": "0.9",
+    "emoji": "🌴",
+    "type": "fruit",
+    "name_usda": "Dates"
+  },
+  {
+    "name": "figues",
+    "category": "proscrire",
+    "vitC": "0.021",
+    "emoji": "🫐",
+    "type": "fruit",
+    "name_usda": "Figs"
+  },
+  {
+    "name": "fraise",
+    "category": "conseillé",
+    "vitC": "56.7",
+    "emoji": "🍓",
+    "type": "fruit",
+    "name_usda": "Strawberries"
+  },
+  {
+    "name": "framboise",
+    "category": "conseillé",
+    "vitC": "25",
+    "emoji": "🫐",
+    "type": "fruit",
+    "name_usda": "Raspberries"
+  },
+  {
+    "name": "fruit de la passion",
+    "category": "conseillé",
+    "vitC": "30",
+    "emoji": "🍈",
+    "type": "fruit",
+    "name_usda": "Passion fruit"
+  },
+  {
+    "name": "goyave",
+    "category": "avec modération",
+    "vitC": "183.5",
+    "emoji": "🍈",
+    "type": "fruit",
+    "name_usda": "Guavas"
+  },
+  {
+    "name": "grenade",
+    "category": "avec modération",
+    "vitC": "6",
+    "emoji": "🍎",
+    "type": "fruit",
+    "name_usda": "Pomegranates"
+  },
+  {
+    "name": "groseille",
+    "category": "avec modération",
+    "vitC": "41",
+    "emoji": "🫐",
+    "type": "fruit",
+    "name_usda": "Currants, red"
+  },
+  {
+    "name": "kaki",
+    "category": "avec modération",
+    "vitC": "66",
+    "emoji": "🍊",
+    "type": "fruit",
+    "name_usda": "Persimmons"
+  },
+  {
+    "name": "kiwi",
+    "category": "conseillé",
+    "vitC": "98",
+    "emoji": "🥝",
+    "type": "fruit",
+    "name_usda": "Kiwi"
+  },
+  {
+    "name": "litchi",
+    "category": "avec modération",
+    "vitC": "71.5",
+    "emoji": "🍈",
+    "type": "fruit",
+    "name_usda": "Lychee"
+  },
+  {
+    "name": "mandarine",
+    "category": "avec modération",
+    "vitC": "30.8",
+    "emoji": "🍊",
+    "type": "fruit",
+    "name_usda": "Tangerines"
+  },
+  {
+    "name": "mangue",
+    "category": "avec modération",
+    "vitC": "27.7",
+    "emoji": "🥭",
+    "type": "fruit",
+    "name_usda": "Mangos"
+  },
+  {
+    "name": "melon",
+    "category": "avec modération",
+    "vitC": "42.2",
+    "emoji": "🍈",
+    "type": "fruit",
+    "name_usda": "Cantaloupe"
+  },
+  {
+    "name": "melon vert ou jaune",
+    "category": "conseillé",
+    "vitC": "",
+    "emoji": "🍈",
+    "type": "fruit",
+    "name_usda": "Honeydew melon"
+  },
+  {
+    "name": "mirabelles",
+    "category": "déconseillé",
+    "vitC": "9.5",
+    "emoji": "🍑",
+    "type": "fruit",
+    "name_usda": "Mirabelle plums"
+  },
+  {
+    "name": "mure",
+    "category": "avec modération",
+    "vitC": "21",
+    "emoji": "🫐",
+    "type": "fruit",
+    "name_usda": "Blackberries"
+  },
+  {
+    "name": "myrtilles",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🫐",
+    "type": "fruit",
+    "name_usda": "Blueberries"
+  },
+  {
+    "name": "nectarine",
+    "category": "avec modération",
+    "vitC": "5.4",
+    "emoji": "🍑",
+    "type": "fruit",
+    "name_usda": "Nectarines"
+  },
+  {
+    "name": "noix de coco",
+    "category": "avec modération",
+    "vitC": "3.3",
+    "emoji": "🥥",
+    "type": "fruit",
+    "name_usda": "Coconut meat"
+  },
+  {
+    "name": "orange",
+    "category": "avec modération",
+    "vitC": "53.2",
+    "emoji": "🍊",
+    "type": "fruit",
+    "name_usda": "Oranges"
+  },
+  {
+    "name": "pamplemousse",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🍊",
+    "type": "fruit",
+    "name_usda": "Grapefruit"
+  },
+  {
+    "name": "pasteque",
+    "category": "déconseillé",
+    "vitC": "9.6",
+    "emoji": "🍉",
+    "type": "fruit",
+    "name_usda": "Watermelon"
+  },
+  {
+    "name": "peche",
+    "category": "avec modération",
+    "vitC": "6.6",
+    "emoji": "🍑",
+    "type": "fruit",
+    "name_usda": "Peaches"
+  },
+  {
+    "name": "pistache",
+    "category": "déconseillé",
+    "vitC": "",
+    "emoji": "🫘",
+    "type": "fruit",
+    "name_usda": "Pistachio nuts"
+  },
+  {
+    "name": "poire",
+    "category": "avec modération",
+    "vitC": "4",
+    "emoji": "🍐",
+    "type": "fruit",
+    "name_usda": "Pears"
+  },
+  {
+    "name": "pomelo",
+    "category": "avec modération",
+    "vitC": "",
+    "emoji": "🍊",
+    "type": "fruit",
+    "name_usda": "Pomelo"
+  },
+  {
+    "name": "pomme",
+    "category": "avec modération",
+    "vitC": "5.7",
+    "emoji": "🍎",
+    "type": "fruit",
+    "name_usda": "Apples"
+  },
+  {
+    "name": "prune",
+    "category": "déconseillé",
+    "vitC": "9.5",
+    "emoji": "🍑",
+    "type": "fruit",
+    "name_usda": "Plums"
+  },
+  {
+    "name": "pruneau",
+    "category": "déconseillé",
+    "vitC": "3.3",
+    "emoji": "🍑",
+    "type": "fruit",
+    "name_usda": "Prunes"
+  },
+  {
+    "name": "raisin",
+    "category": "avec modération",
+    "vitC": "10.8",
+    "emoji": "🍇",
+    "type": "fruit",
+    "name_usda": "Grapes"
+  }
+]
